@@ -6,7 +6,7 @@
     <title>뉴키즈 - 전체 교재 라인업</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* [기본 스타일] */
+        /* [기본 스타일 유지] */
         * {
             margin: 0;
             padding: 0;
@@ -96,17 +96,15 @@
                 font-size: 3.2rem;
                 font-weight: 800;
                 margin-bottom: 20px;
-                text-shadow: 0 4px 10px rgba(0,0,0,0.8);
             }
 
             .sub-hero p {
                 font-size: 1.4rem;
                 font-weight: 600;
                 color: #ffdca8;
-                text-shadow: 0 2px 5px rgba(0,0,0,0.8);
             }
 
-        /* 카드 그리드 */
+        /* 카드 스타일 */
         .product-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -203,45 +201,11 @@
         </div>
     </section>
 
-    <section id="korean">
-        <div class="container">
-            <h2>한글 & 누리과정</h2>
-            <p class="section-desc">언어 능력과 인성을 기르는 기초 교육 프로그램</p>
-            <div id="list-korean" class="product-grid"><p style="text-align:center; width:100%;">게시글을 불러오는 중...</p></div>
-        </div>
-    </section>
-
-    <section id="art" style="background-color: var(--bg-light);">
-        <div class="container">
-            <h2>창의 미술</h2>
-            <p class="section-desc">오감을 자극하고 표현력을 기르는 예술 활동</p>
-            <div id="list-art" class="product-grid"><p style="text-align:center; width:100%;">게시글을 불러오는 중...</p></div>
-        </div>
-    </section>
-
-    <section id="science">
-        <div class="container">
-            <h2>수학 & 과학</h2>
-            <p class="section-desc">호기심을 해결하고 논리적 사고를 키우는 탐구 활동</p>
-            <div id="list-science" class="product-grid"><p style="text-align:center; width:100%;">게시글을 불러오는 중...</p></div>
-        </div>
-    </section>
-
-    <section id="coding" style="background-color: var(--bg-light);">
-        <div class="container">
-            <h2>미래형 코딩</h2>
-            <p class="section-desc">컴퓨터 없이 배우는 논리적 사고력 (Computational Thinking)</p>
-            <div id="list-coding" class="product-grid"><p style="text-align:center; width:100%;">게시글을 불러오는 중...</p></div>
-        </div>
-    </section>
-
-    <section id="english">
-        <div class="container">
-            <h2>글로벌 영어</h2>
-            <p class="section-desc">말하기, 읽기, 쓰기가 즐거워지는 통합 영어 프로그램</p>
-            <div id="list-english" class="product-grid"><p style="text-align:center; width:100%;">게시글을 불러오는 중...</p></div>
-        </div>
-    </section>
+    <section id="korean"><div class="container"><h2>한글 & 누리과정</h2><p class="section-desc">언어 능력과 인성을 기르는 기초 교육 프로그램</p><div id="list-korean" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
+    <section id="art" style="background-color:var(--bg-light);"><div class="container"><h2>창의 미술</h2><p class="section-desc">오감을 자극하고 표현력을 기르는 예술 활동</p><div id="list-art" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
+    <section id="science"><div class="container"><h2>수학 & 과학</h2><p class="section-desc">호기심을 해결하고 논리적 사고를 키우는 탐구 활동</p><div id="list-science" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
+    <section id="coding" style="background-color:var(--bg-light);"><div class="container"><h2>미래형 코딩</h2><p class="section-desc">컴퓨터 없이 배우는 논리적 사고력</p><div id="list-coding" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
+    <section id="english"><div class="container"><h2>글로벌 영어</h2><p class="section-desc">말하기, 읽기, 쓰기가 즐거워지는 통합 영어 프로그램</p><div id="list-english" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
 
     <section style="text-align: center; background-color: var(--primary-color); color: #fff;">
         <div class="container">
@@ -255,12 +219,7 @@
     <script src="manager.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const checkSb = setInterval(() => {
-                if (window.sb) {
-                    clearInterval(checkSb);
-                    loadAllSections(window.sb);
-                }
-            }, 100);
+            const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadAllSections(window.sb); } }, 100);
         });
 
         function getYoutubeId(url) {
@@ -271,7 +230,6 @@
 
         async function loadAllSections(sb) {
             const { data, error } = await sb.from('total_posts').select('*').order('created_at', { ascending: false });
-
             const categories = ['korean', 'art', 'science', 'coding', 'english'];
             categories.forEach(cat => { document.getElementById(`list-${cat}`).innerHTML = ""; });
 
@@ -281,21 +239,27 @@
                 const targetDiv = document.getElementById(`list-${item.category}`);
                 if (!targetDiv) return;
 
-                let imgUrl = item.image_url;
-                let isVideo = false;
-                const yId = getYoutubeId(imgUrl);
+                // [핵심] 여러 장일 경우 첫 장만 사용
+                let thumbSrc = "";
+                try {
+                    const parsed = JSON.parse(item.image_url);
+                    if (Array.isArray(parsed) && parsed.length > 0) thumbSrc = parsed[0];
+                    else thumbSrc = item.image_url;
+                } catch (e) { thumbSrc = item.image_url; }
 
-                if (yId) { imgUrl = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`; isVideo = true; }
-                else if (!imgUrl) { imgUrl = 'https://via.placeholder.com/400x300?text=No+Image'; }
+                let isVideo = false;
+                const yId = getYoutubeId(thumbSrc);
+
+                if (yId) { thumbSrc = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`; isVideo = true; }
+                else if (!thumbSrc) { thumbSrc = 'https://via.placeholder.com/400x300?text=No+Image'; }
 
                 const div = document.createElement('div');
                 div.className = 'product-card';
-                // [수정된 부분] 팝업이 아니라 상세 페이지로 이동
                 div.onclick = () => { location.href = `view.html?id=${item.id}`; };
 
                 div.innerHTML = `
                         <div class="product-img-wrap">
-                            <img src="${imgUrl}" class="product-img">
+                            <img src="${thumbSrc}" class="product-img">
                             <div class="play-icon" style="display:${isVideo ? 'block' : 'none'}">▶</div>
                         </div>
                         <div class="product-info">
