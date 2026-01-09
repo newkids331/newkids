@@ -27,11 +27,12 @@
     </section>
 
     <section id="korean"><div class="container"><h2>한글 & 누리과정</h2><p class="section-desc">언어 능력과 인성을 기르는 기초 교육 프로그램</p><div id="list-korean" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-    <section id="art" style="background-color:var(--bg-light);"><div class="container"><h2>창의 미술</h2><p class="section-desc">오감을 자극하고 표현력을 기르는 예술 활동</p><div id="list-art" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-    <section id="science"><div class="container"><h2>수학 & 과학</h2><p class="section-desc">호기심을 해결하고 논리적 사고를 키우는 탐구 활동</p><div id="list-science" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-    <section id="coding" style="background-color:var(--bg-light);"><div class="container"><h2>미래형 코딩</h2><p class="section-desc">컴퓨터 없이 배우는 논리적 사고력</p><div id="list-coding" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
-    <section id="english"><div class="container"><h2>글로벌 영어</h2><p class="section-desc">말하기, 읽기, 쓰기가 즐거워지는 통합 영어 프로그램</p><div id="list-english" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
 
+    <section id="art" style="background-color:var(--bg-light);"><div class="container"><h2>미술 & 자연 환경</h2><p class="section-desc">오감을 자극하고 자연을 배우는 예술 활동</p><div id="list-art" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
+
+    <section id="science"><div class="container"><h2>수학 & 과학</h2><p class="section-desc">호기심을 해결하고 논리적 사고를 키우는 탐구 활동</p><div id="list-science" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
+    <section id="coding" style="background-color:var(--bg-light);"><div class="container"><h2>코딩 & 직업교육</h2><p class="section-desc">논리적 사고력과 미래 직업을 미리 체험하는 융합 교육</p><div id="list-coding" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
+    <section id="english"><div class="container"><h2>글로벌 영어</h2><p class="section-desc">말하기, 읽기, 쓰기가 즐거워지는 통합 영어 프로그램</p><div id="list-english" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
     <section id="integrated" style="background-color:var(--bg-light);"><div class="container"><h2>통합보육</h2><p class="section-desc">영유아의 균형 잡힌 성장을 돕는 표준보육과정 통합 프로그램</p><div id="list-integrated" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
 
     <section style="text-align: center; background-color: var(--primary-color); color: #fff;">
@@ -56,10 +57,7 @@
 
         async function loadAllSections(sb) {
             const { data, error } = await sb.from('total_posts').select('*').order('created_at', { ascending: false });
-
-            // [수정] integrated(통합보육) 추가됨
             const categories = ['korean', 'art', 'science', 'coding', 'english', 'integrated'];
-
             categories.forEach(cat => { document.getElementById(`list-${cat}`).innerHTML = ""; });
 
             if (!data || data.length === 0) return;
