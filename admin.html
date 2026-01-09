@@ -63,7 +63,7 @@
             margin-top: 15px;
         }
 
-        input[type="text"], textarea, input[type="file"], select {
+        input[type="text"], input[type="number"], textarea, input[type="file"], select {
             width: 100%;
             padding: 12px;
             border: 1px solid #ccc;
@@ -240,14 +240,17 @@
                         <option value="performance">👨‍👩‍👧‍👦 부모 참여 행사</option>
                     </optgroup>
                     <optgroup label="교재 프로그램">
-                        <option value="korean">📚 한글 & 누리과정</option>
+                        <option value="korean">📚 한글 & 독서</option>
                         <option value="art">🎨 미술 & 자연 환경</option>
                         <option value="science">🔬 수학 & 과학</option>
                         <option value="coding">💻 코딩 & 직업교육</option>
-                        <option value="english">🔤 글로벌 영어</option>
-                        <option value="integrated">👶 통합보육</option>
+                        <option value="english">🔤 영어 & 지도</option>
+                        <option value="integrated">👶 통합보육 & 누리과정</option>
                     </optgroup>
                 </select>
+
+                <label>순서 설정 (선택사항)</label>
+                <input type="number" id="post-order" placeholder="숫자가 작을수록 앞에 나옵니다. (예: 1, 2, 3...) / 기본값 0" style="border-color: #2a9d8f;">
 
                 <label>제목</label>
                 <input type="text" id="post-title" placeholder="제목을 입력하세요">
@@ -261,7 +264,6 @@
 
                 <input type="text" id="youtube-url" placeholder="유튜브 링크 (https://youtu.be/...)" style="margin-top:10px;">
                 <input type="text" id="post-link" placeholder="🔗 관련 외부 사이트 링크 (예: https://naver.com)" style="margin-top:10px; border-color: #4cc9f0;">
-                <p style="font-size:0.8rem; color:#888; margin-top:5px;">※ 외부 링크를 입력하면 게시글 클릭 시 해당 사이트로 이동하게 만들 수 있습니다.</p>
 
                 <label>내용</label>
                 <textarea id="post-content" placeholder="내용을 입력하세요"></textarea>
@@ -308,7 +310,6 @@
             const checkSb = setInterval(() => {
                 if (window.sb) {
                     clearInterval(checkSb);
-                    console.log("Supabase 연결 확인됨");
                     checkSession(window.sb);
                 }
             }, 100);
@@ -350,6 +351,8 @@
             const category = document.getElementById('post-category').value;
             const title = document.getElementById('post-title').value;
             const content = document.getElementById('post-content').value;
+            const orderNum = document.getElementById('post-order').value || 0;
+
             const thumbInput = document.getElementById('post-thumb-file');
             const detailInput = document.getElementById('post-file');
             const youtube = document.getElementById('youtube-url').value;
@@ -388,7 +391,15 @@
                     if (thumbInput.files.length === 0) finalThumbUrl = null;
                     if (detailInput.files.length === 0 && !youtube) finalDetailUrl = null;
                 }
-                const postData = { category, title, content, thumbnail_url: finalThumbUrl, image_url: finalDetailUrl, link_url: linkUrl };
+
+                const postData = {
+                    category, title, content,
+                    thumbnail_url: finalThumbUrl,
+                    image_url: finalDetailUrl,
+                    link_url: linkUrl,
+                    order_num: orderNum
+                };
+
                 if (editingId) {
                     await sb.from('total_posts').update(postData).eq('id', editingId);
                     alert("수정되었습니다!");
@@ -421,7 +432,10 @@
 
             let query = sb.from('total_posts').select('*');
             if (filterValue !== 'all') query = query.eq('category', filterValue);
-            const { data, error } = await query.order('created_at', { ascending: false });
+
+            const { data, error } = await query
+                .order('order_num', { ascending: true })
+                .order('created_at', { ascending: false });
 
             if (error || !data) {
                 listDiv.innerHTML = "<p>목록을 불러올 수 없습니다.</p>";
@@ -434,10 +448,11 @@
                 'korean': '#e76f51', 'art': '#f4a261', 'science': '#457b9d', 'coding': '#7209b7', 'english': '#1a3c6e',
                 'integrated': '#2a9d8f'
             };
+            // [수정됨] 뱃지 이름 변경
             const catNames = {
                 'season': '시즌', 'culture': '원어민', 'performance': '부모참여',
-                'korean': '한글', 'art': '미술 & 자연', 'science': '과학', 'coding': '코딩', 'english': '영어', // 수정됨
-                'integrated': '통합보육'
+                'korean': '한글 & 독서', 'art': '미술 & 자연', 'science': '과학',
+                'coding': '코딩 & 직업', 'english': '영어 & 지도', 'integrated': '통합 & 누리'
             };
 
             data.forEach(item => {
@@ -454,13 +469,17 @@
                 else imgHtml = `<div class="post-thumb" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">이미지 없음</div>`;
 
                 let linkBadge = item.link_url ? '<span style="font-size:12px; margin-left:5px;">🔗</span>' : '';
+                let orderBadge = (item.order_num && item.order_num > 0)
+                    ? `<span style="background:#222; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem; margin-right:5px;">${item.order_num}</span>`
+                    : '';
+
                 const itemStr = encodeURIComponent(JSON.stringify(item));
 
                 listDiv.innerHTML += `
                         <div class="post-card">
                             ${imgHtml}
                             <div class="post-info">
-                                <span class="category-badge" style="background:${color}">${catName}</span> ${linkBadge}
+                                <div>${orderBadge}<span class="category-badge" style="background:${color}">${catName}</span> ${linkBadge}</div>
                                 <div class="post-title">${item.title}</div>
                             </div>
                             <div class="post-actions">
@@ -480,6 +499,8 @@
             document.getElementById('post-title').value = item.title;
             document.getElementById('post-content').value = item.content;
             document.getElementById('post-link').value = item.link_url || "";
+            document.getElementById('post-order').value = item.order_num || 0;
+
             document.getElementById('post-file').value = "";
             document.getElementById('post-thumb-file').value = "";
             document.getElementById('youtube-url').value = "";
@@ -495,6 +516,8 @@
             document.getElementById('post-title').value = ""; document.getElementById('post-content').value = "";
             document.getElementById('post-file').value = ""; document.getElementById('post-thumb-file').value = "";
             document.getElementById('youtube-url').value = ""; document.getElementById('post-link').value = "";
+            document.getElementById('post-order').value = "";
+
             document.getElementById('form-title').innerText = "📝 새 글 작성하기";
             document.getElementById('form-title').style.color = "#1a3c6e";
             document.getElementById('btn-submit').innerText = "업로드";

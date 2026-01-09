@@ -40,7 +40,6 @@
             padding: 80px 0;
         }
 
-        /* 헤더 스타일 (manager.js와 연동) */
         header {
             width: 100%;
             height: 70px;
@@ -51,7 +50,6 @@
             z-index: 1000;
         }
 
-        /* 서브 배너 */
         .sub-hero {
             height: 300px;
             background: linear-gradient(rgba(26,60,110,0.8), rgba(26,60,110,0.8)), url('https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1600&q=80') center/center no-repeat;
@@ -75,7 +73,6 @@
                 color: #ffdca8;
             }
 
-        /* 폼 스타일 */
         .form-box {
             background: #fff;
             padding: 40px;
@@ -111,7 +108,6 @@
                 outline: none;
             }
 
-        /* 체크박스 그룹 */
         .checkbox-group {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -143,7 +139,6 @@
             padding-bottom: 5px;
         }
 
-        /* 버튼 */
         .btn-submit {
             display: block;
             width: 100%;
@@ -200,12 +195,10 @@
                         <label class="form-label">연락처 (휴대전화)</label>
                         <input type="tel" name="phone" class="form-input" placeholder="010-0000-0000 (상담용)" required>
                     </div>
-
                     <div class="form-group">
                         <label class="form-label">이메일 (제안서 받으실 곳)</label>
                         <input type="email" name="email" class="form-input" placeholder="example@naver.com">
                     </div>
-
                     <div class="form-group">
                         <label class="form-label">지역 (시/구)</label>
                         <input type="text" name="area" class="form-input" placeholder="예) 김포시 구래동">
@@ -216,12 +209,12 @@
 
                         <div class="group-title">📚 교재 프로그램</div>
                         <div class="checkbox-group">
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="한글/누리과정"> 한글/누리과정</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="미술교재"> 미술 & 자연 환경</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="한글/독서"> 한글 & 독서</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="미술/자연"> 미술 & 자연 환경</label>
                             <label class="checkbox-item"><input type="checkbox" name="interests" value="과학/수학"> 과학/수학</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="코딩교재"> 코딩 & 직업교육</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="영어교재"> 글로벌 영어</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="통합보육"> 통합보육</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="코딩/직업"> 코딩 & 직업교육</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="영어/지도"> 영어 & 지도</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="통합보육/누리"> 통합보육 & 누리과정</label>
                         </div>
 
                         <div class="group-title">🎉 행사 프로그램</div>
@@ -236,12 +229,10 @@
                         <label class="form-label">📅 방문 및 전화 상담 희망 날짜</label>
                         <input type="date" name="visitDate" class="form-input">
                     </div>
-
                     <div class="form-group">
                         <label class="form-label">문의사항 (시간대 등)</label>
                         <textarea name="inquiry" class="form-input" style="height: 120px; resize: vertical;" placeholder="원하시는 시간대나 궁금하신 점을 자유롭게 적어주세요."></textarea>
                     </div>
-
                     <button type="submit" class="btn-submit">견적 및 상담 신청하기</button>
                 </form>
             </div>
@@ -252,19 +243,16 @@
     <script src="manager.js"></script>
     <script>
         const GOOGLE_SCRIPT_URL = SHEET_URL;
-
         const form = document.getElementById('proposalForm');
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
-
             const btn = form.querySelector('.btn-submit');
             const originalText = btn.innerText;
             btn.disabled = true;
             btn.innerText = "전송 중입니다...";
 
             const formData = new FormData(form);
-
             let interestsArray = [];
             form.querySelectorAll('input[name="interests"]:checked').forEach(chk => {
                 interestsArray.push(chk.value);

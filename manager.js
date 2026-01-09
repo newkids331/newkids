@@ -95,11 +95,12 @@ function loadHeader() {
                     <li>
                         <a href="javascript:void(0)" onclick="window.toggleSubMenu(this)">교재소개 ▾</a>
                         <ul class="dropdown">
-                            <li><a href="child.html#korean">📚 한글 & 누리과정</a></li>
-                            <li><a href="child.html#art">🎨 미술 & 자연 환경</a></li> <li><a href="child.html#science">🔬 수학 & 과학</a></li>
+                            <li><a href="child.html#korean">📚 한글 & 독서</a></li>
+                            <li><a href="child.html#art">🎨 미술 & 자연 환경</a></li>
+                            <li><a href="child.html#science">🔬 수학 & 과학</a></li>
                             <li><a href="child.html#coding">💻 코딩 & 직업교육</a></li>
-                            <li><a href="child.html#english">🔤 글로벌 영어</a></li>
-                            <li><a href="child.html#integrated">👶 통합보육</a></li>
+                            <li><a href="child.html#english">🔤 영어 & 지도</a></li>
+                            <li><a href="child.html#integrated">👶 통합보육 & 누리과정</a></li>
                         </ul>
                     </li>
                     <li>
