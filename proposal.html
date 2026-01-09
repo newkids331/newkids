@@ -217,9 +217,11 @@
                         <div class="group-title">📚 교재 프로그램</div>
                         <div class="checkbox-group">
                             <label class="checkbox-item"><input type="checkbox" name="interests" value="한글/누리과정"> 한글/누리과정</label>
-                            <label class="checkbox-item"><input type="checkbox" name="interests" value="미술교재"> 미술 & 자연 환경</label> <label class="checkbox-item"><input type="checkbox" name="interests" value="과학/수학"> 과학/수학</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="미술교재"> 미술 & 자연 환경</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="과학/수학"> 과학/수학</label>
                             <label class="checkbox-item"><input type="checkbox" name="interests" value="코딩교재"> 코딩 & 직업교육</label>
                             <label class="checkbox-item"><input type="checkbox" name="interests" value="영어교재"> 글로벌 영어</label>
+                            <label class="checkbox-item"><input type="checkbox" name="interests" value="통합보육"> 통합보육</label>
                         </div>
 
                         <div class="group-title">🎉 행사 프로그램</div>
@@ -272,7 +274,6 @@
                 wonName: formData.get("wonName"),
                 manager: formData.get("manager"),
                 phone: formData.get("phone"),
-                // [추가] 이메일 전송
                 email: formData.get("email"),
                 area: formData.get("area"),
                 interests: interestsArray.join(", "),
