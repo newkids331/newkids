@@ -6,107 +6,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .sub-hero {
-            background: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1566222829713-5f9518526308?auto=format&fit=crop&w=1600&q=80') center/center no-repeat;
+            background-image: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1566222829713-5f9518526308?auto=format&fit=crop&w=1600&q=80');
         }
-
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 30px;
-        }
-
-        .card {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: 0.3s;
-            border: 1px solid #eee;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            position: relative;
-        }
-
-            .card:hover {
-                transform: translateY(-10px);
-                box-shadow: 0 15px 30px rgba(0,0,0,0.15);
-                border-color: var(--accent-color);
-            }
-
-        .card-img-wrap {
-            width: 100%;
-            height: 220px;
-            position: relative;
-            background: #f0f0f0;
-            overflow: hidden;
-        }
-
-        .card-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .play-icon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 3rem;
-            color: rgba(255,255,255,0.9);
-            display: none;
-        }
-
-        .link-icon {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            z-index: 10;
-        }
-
-        .card-body {
-            padding: 20px;
-        }
-
-        .card-title {
-            font-weight: bold;
-            font-size: 1.2rem;
-            margin-bottom: 8px;
-            color: #333;
-        }
-
-        .card-text {
-            font-size: 0.95rem;
-            color: #666;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .btn-cta {
-            display: inline-block;
-            padding: 12px 30px;
-            background-color: #fff;
-            color: #1a3c6e;
-            border-radius: 5px;
-            font-weight: bold;
-            transition: 0.3s;
-            text-decoration: none;
-        }
-
-            .btn-cta:hover {
-                background-color: #f4a261;
-                color: #fff;
-            }
     </style>
 </head>
 <body>
@@ -127,35 +28,33 @@
         <div class="container">
             <h2 style="color: #fff;">부모님도 아이들도 만족하는 참여 수업!</h2>
             <p style="margin-bottom: 20px;">원장님께 딱 맞는 행사 프로그램을 제안해 드립니다.</p>
-            <a href="proposal.html" class="btn-cta">📋 견적 및 상담 신청</a>
+            <a href="proposal.html" class="btn">📋 견적 및 상담 신청</a>
         </div>
     </section>
     <footer></footer>
     <script src="manager.js"></script>
     <script>
-        const CATEGORY_NAME = 'performance';
+        const CATEGORY_NAME = 'performance'; // 이것만 다름
+
         document.addEventListener("DOMContentLoaded", function () {
             const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadPosts(window.sb); } }, 100);
         });
-        function getYoutubeId(url) {
-            if (!url) return null;
-            const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
-            return (match && match[7].length === 11) ? match[7] : null;
-        }
+
         async function loadPosts(sb) {
             const { data } = await sb.from('total_posts').select('*').eq('category', CATEGORY_NAME).order('created_at', { ascending: false });
             const list = document.getElementById('post-list');
             list.innerHTML = "";
             if (!data || data.length === 0) { list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`; return; }
+
             data.forEach(item => {
                 let displayImg = item.thumbnail_url;
                 if (!displayImg) {
                     try { const parsed = JSON.parse(item.image_url); if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0]; else displayImg = item.image_url; } catch (e) { displayImg = item.image_url; }
                 }
-                let isVideo = false;
-                const yId = getYoutubeId(displayImg);
-                if (yId) { displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`; isVideo = true; }
-                else if (!displayImg) { displayImg = 'https://via.placeholder.com/400x300?text=No+Image'; }
+                if (!displayImg) displayImg = 'https://via.placeholder.com/400x300?text=No+Image';
+
+                const match = displayImg.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
+                if (match && match[7].length === 11) displayImg = `https://img.youtube.com/vi/${match[7]}/hqdefault.jpg`;
 
                 const linkIcon = item.link_url ? `<div class="link-icon">🔗</div>` : '';
 
@@ -171,12 +70,12 @@
                     }
                 };
                 div.innerHTML = `
-                            ${linkIcon}
-                            <div class="card-img-wrap">
-                                <img src="${displayImg}" class="card-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
-                                <div class="play-icon" style="display:${isVideo ? 'block' : 'none'}">▶</div>
-                            </div>
-                            <div class="card-body"><div class="card-title">${item.title}</div><div class="card-text">${item.content}</div></div>`;
+                        ${linkIcon}
+                        <img src="${displayImg}" class="card-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
+                        <div class="card-body">
+                            <div class="card-title">${item.title}</div>
+                            <div class="card-text">${item.content}</div>
+                        </div>`;
                 list.appendChild(div);
             });
         }
