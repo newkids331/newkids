@@ -18,7 +18,6 @@
             padding: 40px 20px 80px;
         }
 
-        /* 로그인 섹션 */
         #login-section {
             max-width: 400px;
             margin: 80px auto;
@@ -38,7 +37,6 @@
                 box-sizing: border-box;
             }
 
-        /* 관리자 섹션 (숨김) */
         #admin-section {
             display: none;
         }
@@ -79,7 +77,6 @@
             resize: vertical;
         }
 
-        /* 버튼 스타일 */
         .btn-action {
             display: block;
             width: 100%;
@@ -109,7 +106,6 @@
             display: none;
         }
 
-        /* 목록 그리드 */
         #manage-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -181,7 +177,6 @@
             background: #ff4d4d;
         }
 
-        /* 필터 영역 */
         .filter-area {
             display: flex;
             justify-content: space-between;
@@ -201,7 +196,6 @@
             width: 200px;
         }
 
-        /* 로딩 오버레이 */
         .loading-overlay {
             display: none;
             position: fixed;
@@ -251,6 +245,7 @@
                         <option value="science">🔬 수학 & 과학</option>
                         <option value="coding">💻 미래형 코딩</option>
                         <option value="english">🔤 글로벌 영어</option>
+                        <option value="integrated">👶 통합보육</option>
                     </optgroup>
                 </select>
 
@@ -292,6 +287,7 @@
                             <option value="science">🔬 과학</option>
                             <option value="coding">💻 코딩</option>
                             <option value="english">🔤 영어</option>
+                            <option value="integrated">👶 통합보육</option>
                         </optgroup>
                     </select>
                 </div>
@@ -304,12 +300,10 @@
     <script src="manager.js"></script>
 
     <script>
-        // 전역 변수
         let editingId = null;
         let originalDetailUrl = null;
         let originalThumbUrl = null;
 
-        // [1] 초기화
         document.addEventListener("DOMContentLoaded", function () {
             const checkSb = setInterval(() => {
                 if (window.sb) {
@@ -320,7 +314,6 @@
             }, 100);
         });
 
-        // [2] 로그인 상태 확인
         async function checkSession(sb) {
             const { data: { session } } = await sb.auth.getSession();
             if (session) {
@@ -333,53 +326,42 @@
             }
         }
 
-        // [3] 로그인
         async function adminLogin() {
             const email = document.getElementById('admin-email').value;
             const password = document.getElementById('admin-password').value;
-
             if (!email || !password) return alert("이메일과 비밀번호를 입력해주세요.");
-
             const { error } = await window.sb.auth.signInWithPassword({ email, password });
             if (error) alert("로그인 오류: " + error.message);
             else location.reload();
         }
 
-        // [4] 로그아웃
         async function logout() {
             await window.sb.auth.signOut();
             location.reload();
         }
 
-        // [5] 파일명 안전하게 변경하는 함수
         function getSafeFileName(originalName, prefix) {
             const ext = originalName.split('.').pop();
             return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 10)}.${ext}`;
         }
 
-        // [6] 게시글 저장 (업로드/수정)
         async function savePost() {
             const sb = window.sb;
-
-            // 입력값 가져오기
             const category = document.getElementById('post-category').value;
             const title = document.getElementById('post-title').value;
             const content = document.getElementById('post-content').value;
             const thumbInput = document.getElementById('post-thumb-file');
             const detailInput = document.getElementById('post-file');
             const youtube = document.getElementById('youtube-url').value;
-            // [추가] 외부 링크 값 가져오기
             const linkUrl = document.getElementById('post-link').value;
 
             if (!title || !content) return alert("제목과 내용은 필수입니다.");
-
             document.getElementById('loading').style.display = 'block';
 
             let finalThumbUrl = originalThumbUrl;
             let finalDetailUrl = originalDetailUrl;
 
             try {
-                // A. 썸네일 업로드
                 if (thumbInput.files.length > 0) {
                     const file = thumbInput.files[0];
                     const fileName = getSafeFileName(file.name, 'thumb');
@@ -388,8 +370,6 @@
                     const { data } = sb.storage.from('images').getPublicUrl(fileName);
                     finalThumbUrl = data.publicUrl;
                 }
-
-                // B. 상세 이미지 업로드
                 if (detailInput.files.length > 0) {
                     let uploadedUrls = [];
                     for (let i = 0; i < detailInput.files.length; i++) {
@@ -404,23 +384,11 @@
                 } else if (youtube) {
                     finalDetailUrl = youtube;
                 }
-
                 if (!editingId) {
                     if (thumbInput.files.length === 0) finalThumbUrl = null;
                     if (detailInput.files.length === 0 && !youtube) finalDetailUrl = null;
                 }
-
-                // D. DB 저장 데이터 구성 (link_url 추가됨)
-                const postData = {
-                    category: category,
-                    title: title,
-                    content: content,
-                    thumbnail_url: finalThumbUrl,
-                    image_url: finalDetailUrl,
-                    link_url: linkUrl // [추가]
-                };
-
-                // E. DB Insert 또는 Update
+                const postData = { category, title, content, thumbnail_url: finalThumbUrl, image_url: finalDetailUrl, link_url: linkUrl };
                 if (editingId) {
                     await sb.from('total_posts').update(postData).eq('id', editingId);
                     alert("수정되었습니다!");
@@ -428,10 +396,8 @@
                     await sb.from('total_posts').insert([postData]);
                     alert("업로드 완료!");
                 }
-
                 cancelEdit();
                 filterList();
-
             } catch (e) {
                 console.error(e);
                 alert("오류 발생: " + e.message);
@@ -440,29 +406,21 @@
             }
         }
 
-        // [7] 목록 필터링
-        function filterList() {
-            loadManageList(window.sb);
-        }
+        function filterList() { loadManageList(window.sb); }
 
-        // [8] 유튜브 ID 추출
         function getYoutubeId(url) {
             if (!url) return null;
             const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
             return (match && match[7].length === 11) ? match[7] : null;
         }
 
-        // [9] 관리 목록 불러오기
         async function loadManageList(sb) {
             const filterValue = document.getElementById('filter-category').value;
             const listDiv = document.getElementById('manage-list');
             listDiv.innerHTML = "<p style='grid-column:1/-1;text-align:center;'>데이터를 불러오는 중...</p>";
 
             let query = sb.from('total_posts').select('*');
-            if (filterValue !== 'all') {
-                query = query.eq('category', filterValue);
-            }
-
+            if (filterValue !== 'all') query = query.eq('category', filterValue);
             const { data, error } = await query.order('created_at', { ascending: false });
 
             if (error || !data) {
@@ -471,110 +429,84 @@
             }
 
             listDiv.innerHTML = "";
-
             const badgeColors = {
                 'season': '#4cc9f0', 'culture': '#1a3c6e', 'performance': '#f4a261',
-                'korean': '#e76f51', 'art': '#f4a261', 'science': '#457b9d', 'coding': '#7209b7', 'english': '#1a3c6e'
+                'korean': '#e76f51', 'art': '#f4a261', 'science': '#457b9d', 'coding': '#7209b7', 'english': '#1a3c6e',
+                'integrated': '#2a9d8f' // [추가] 통합보육 색상
             };
             const catNames = {
                 'season': '시즌', 'culture': '원어민', 'performance': '부모참여',
-                'korean': '한글', 'art': '미술', 'science': '과학', 'coding': '코딩', 'english': '영어'
+                'korean': '한글', 'art': '미술', 'science': '과학', 'coding': '코딩', 'english': '영어',
+                'integrated': '통합보육' // [추가] 이름
             };
 
             data.forEach(item => {
                 const color = badgeColors[item.category] || '#999';
                 const catName = catNames[item.category] || item.category;
-
                 let displayImg = item.thumbnail_url;
                 if (!displayImg) {
-                    try {
-                        const parsed = JSON.parse(item.image_url);
-                        if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0];
-                        else displayImg = item.image_url;
-                    } catch (e) { displayImg = item.image_url; }
+                    try { const parsed = JSON.parse(item.image_url); if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0]; else displayImg = item.image_url; } catch (e) { displayImg = item.image_url; }
                 }
-
                 const yId = getYoutubeId(displayImg);
                 let imgHtml = "";
                 if (yId) imgHtml = `<img src="https://img.youtube.com/vi/${yId}/hqdefault.jpg" class="post-thumb">`;
                 else if (displayImg) imgHtml = `<img src="${displayImg}" class="post-thumb" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">`;
                 else imgHtml = `<div class="post-thumb" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">이미지 없음</div>`;
 
-                // 링크 아이콘 추가 (링크가 있을 경우)
                 let linkBadge = item.link_url ? '<span style="font-size:12px; margin-left:5px;">🔗</span>' : '';
-
                 const itemStr = encodeURIComponent(JSON.stringify(item));
 
                 listDiv.innerHTML += `
-                            <div class="post-card">
-                                ${imgHtml}
-                                <div class="post-info">
-                                    <span class="category-badge" style="background:${color}">${catName}</span> ${linkBadge}
-                                    <div class="post-title">${item.title}</div>
-                                </div>
-                                <div class="post-actions">
-                                    <button onclick="startEdit('${itemStr}')" class="btn-edit">수정</button>
-                                    <button onclick="deletePost(${item.id})" class="btn-del">삭제</button>
-                                </div>
-                            </div>`;
+                        <div class="post-card">
+                            ${imgHtml}
+                            <div class="post-info">
+                                <span class="category-badge" style="background:${color}">${catName}</span> ${linkBadge}
+                                <div class="post-title">${item.title}</div>
+                            </div>
+                            <div class="post-actions">
+                                <button onclick="startEdit('${itemStr}')" class="btn-edit">수정</button>
+                                <button onclick="deletePost(${item.id})" class="btn-del">삭제</button>
+                            </div>
+                        </div>`;
             });
         }
 
-        // [10] 수정 모드 시작
         function startEdit(itemStr) {
             const item = JSON.parse(decodeURIComponent(itemStr));
             editingId = item.id;
             originalDetailUrl = item.image_url;
             originalThumbUrl = item.thumbnail_url;
-
             document.getElementById('post-category').value = item.category;
             document.getElementById('post-title').value = item.title;
             document.getElementById('post-content').value = item.content;
-            // [추가] 링크 값 불러오기
             document.getElementById('post-link').value = item.link_url || "";
-
             document.getElementById('post-file').value = "";
             document.getElementById('post-thumb-file').value = "";
             document.getElementById('youtube-url').value = "";
-
             document.getElementById('form-title').innerText = "✏️ 게시글 수정 중";
             document.getElementById('form-title').style.color = "#e76f51";
             document.getElementById('btn-submit').innerText = "수정 완료";
             document.getElementById('btn-cancel-edit').style.display = 'block';
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // [11] 수정 취소
         function cancelEdit() {
-            editingId = null;
-            originalDetailUrl = null;
-            originalThumbUrl = null;
-
-            document.getElementById('post-title').value = "";
-            document.getElementById('post-content').value = "";
-            document.getElementById('post-file').value = "";
-            document.getElementById('post-thumb-file').value = "";
-            document.getElementById('youtube-url').value = "";
-            // [추가] 링크 값 초기화
-            document.getElementById('post-link').value = "";
-
+            editingId = null; originalDetailUrl = null; originalThumbUrl = null;
+            document.getElementById('post-title').value = ""; document.getElementById('post-content').value = "";
+            document.getElementById('post-file').value = ""; document.getElementById('post-thumb-file').value = "";
+            document.getElementById('youtube-url').value = ""; document.getElementById('post-link').value = "";
             document.getElementById('form-title').innerText = "📝 새 글 작성하기";
             document.getElementById('form-title').style.color = "#1a3c6e";
             document.getElementById('btn-submit').innerText = "업로드";
             document.getElementById('btn-cancel-edit').style.display = 'none';
         }
 
-        // [12] 글 삭제
         async function deletePost(id) {
             if (confirm("정말 삭제하시겠습니까? 복구할 수 없습니다.")) {
                 const sb = window.sb;
                 const { error } = await sb.from('total_posts').delete().eq('id', id);
                 if (error) alert("삭제 실패: " + error.message);
-                else {
-                    if (editingId === id) cancelEdit();
-                    loadManageList(sb);
-                }
+                else { if (editingId === id) cancelEdit(); loadManageList(sb); }
             }
         }
     </script>

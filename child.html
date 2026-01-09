@@ -32,6 +32,8 @@
     <section id="coding" style="background-color:var(--bg-light);"><div class="container"><h2>미래형 코딩</h2><p class="section-desc">컴퓨터 없이 배우는 논리적 사고력</p><div id="list-coding" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
     <section id="english"><div class="container"><h2>글로벌 영어</h2><p class="section-desc">말하기, 읽기, 쓰기가 즐거워지는 통합 영어 프로그램</p><div id="list-english" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
 
+    <section id="integrated" style="background-color:var(--bg-light);"><div class="container"><h2>통합보육</h2><p class="section-desc">영유아의 균형 잡힌 성장을 돕는 표준보육과정 통합 프로그램</p><div id="list-integrated" class="product-grid"><p style="text-align:center;width:100%;">로딩 중...</p></div></div></section>
+
     <section style="text-align: center; background-color: var(--primary-color); color: #fff;">
         <div class="container">
             <h2 style="color: #fff;">우리 원에 딱 맞는 교재를 찾고 계신가요?</h2>
@@ -54,7 +56,10 @@
 
         async function loadAllSections(sb) {
             const { data, error } = await sb.from('total_posts').select('*').order('created_at', { ascending: false });
-            const categories = ['korean', 'art', 'science', 'coding', 'english'];
+
+            // [수정] integrated(통합보육) 추가됨
+            const categories = ['korean', 'art', 'science', 'coding', 'english', 'integrated'];
+
             categories.forEach(cat => { document.getElementById(`list-${cat}`).innerHTML = ""; });
 
             if (!data || data.length === 0) return;
@@ -91,7 +96,6 @@
                     }
                 };
 
-                // [수정됨] object-fit: contain 적용
                 div.innerHTML = `
                         ${linkIcon}
                         <div class="product-img-wrap" style="position:relative; width:100%; height:220px; overflow:hidden; background:#ffffff; border-bottom:1px solid #eee;">

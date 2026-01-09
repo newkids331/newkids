@@ -1,4 +1,4 @@
-// manager.js - 통합 관리자 (최종 최적화 버전)
+// manager.js - 통합 관리자 (최종 최적화 버전 + 통합보육 추가)
 
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxSplFkhOWrcL9CQbdXThqKJ4InlADs3gurAU3MORok5Xh7Q_dUAi3slQprB5wfQ40Y/exec";
 const LOGO_IMAGE_URL = "https://n-kids.github.io/newkids/logo.png";
@@ -100,7 +100,7 @@ function loadHeader() {
                             <li><a href="child.html#science">🔬 수학 & 과학</a></li>
                             <li><a href="child.html#coding">💻 미래형 코딩</a></li>
                             <li><a href="child.html#english">🔤 글로벌 영어</a></li>
-                        </ul>
+                            <li><a href="child.html#integrated">👶 통합보육</a></li> </ul>
                     </li>
                     <li>
                         <a href="javascript:void(0)" onclick="window.toggleSubMenu(this)">행사프로그램 ▾</a>
