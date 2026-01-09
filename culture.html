@@ -102,7 +102,8 @@
                 .from('total_posts')
                 .select('*')
                 .eq('category', CATEGORY_NAME)
-                .order('created_at', { ascending: false });
+                .order('order_num', { ascending: true }) // 번호 작은 순서 먼저
+                .order('created_at', { ascending: false }); // 그 다음 최신순
 
             const list = document.getElementById('post-list');
             list.innerHTML = "";

@@ -56,7 +56,8 @@
         }
 
         async function loadAllSections(sb) {
-            const { data, error } = await sb.from('total_posts').select('*').order('created_at', { ascending: false });
+            const { data, error } = await sb.from('total_posts').select('*').order('order_num', { ascending: true }) // 번호 작은 순서 먼저
+                .order('created_at', { ascending: false }); // 그 다음 최신순
             const categories = ['korean', 'art', 'science', 'coding', 'english', 'integrated'];
             categories.forEach(cat => { document.getElementById(`list-${cat}`).innerHTML = ""; });
 
