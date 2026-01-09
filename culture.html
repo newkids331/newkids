@@ -2,7 +2,6 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>뉴키즈 - 원어민 문화 체험</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -119,7 +118,7 @@
             max-width: 380px;
             width: 100%;
             margin: 0 auto;
-            position: relative; /* 아이콘 배치를 위해 */
+            position: relative;
         }
 
             .card:hover {
@@ -165,7 +164,7 @@
             text-align: right;
         }
 
-        /* 외부 링크 표시 아이콘 */
+        /* 외부 링크 아이콘 */
         .link-icon {
             position: absolute;
             top: 15px;
@@ -179,107 +178,6 @@
             align-items: center;
             justify-content: center;
             font-size: 14px;
-        }
-
-        /* [팝업(모달) 스타일] */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.75);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: white;
-            width: 100%;
-            max-width: 600px;
-            max-height: 90vh;
-            border-radius: 15px;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            animation: slideUp 0.3s ease-out;
-        }
-
-        @keyframes slideUp {
-            from {
-                transform: translateY(50px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
-        }
-
-        .modal-header {
-            position: relative;
-        }
-
-        .modal-img {
-            width: 100%;
-            height: auto;
-            display: block;
-            max-height: 400px;
-            object-fit: cover;
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(0,0,0,0.6);
-            color: white;
-            border: none;
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-        }
-
-            .close-btn:hover {
-                background: rgba(0,0,0,0.8);
-            }
-
-        .modal-body {
-            padding: 30px;
-        }
-
-        .modal-title {
-            font-size: 1.6rem;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: var(--primary-color);
-            line-height: 1.3;
-        }
-
-        .modal-text {
-            font-size: 1.05rem;
-            color: #444;
-            white-space: pre-wrap;
-            line-height: 1.8;
-        }
-
-        .modal-date {
-            margin-top: 30px;
-            font-size: 0.9rem;
-            color: #999;
-            text-align: right;
-            border-top: 1px solid #eee;
-            padding-top: 15px;
         }
 
         @media (max-width: 768px) {
@@ -326,20 +224,6 @@
         </div>
     </section>
 
-    <div id="post-modal" class="modal-overlay" onclick="closeModal(event)">
-        <div class="modal-content">
-            <div class="modal-header">
-                <button class="close-btn" onclick="closeModal(event)">×</button>
-                <img id="modal-img" class="modal-img" src="" style="display:none;">
-            </div>
-            <div class="modal-body">
-                <h3 id="modal-title" class="modal-title"></h3>
-                <div id="modal-text" class="modal-text"></div>
-                <div id="modal-date" class="modal-date"></div>
-            </div>
-        </div>
-    </div>
-
     <footer></footer>
     <script src="manager.js"></script>
 
@@ -361,32 +245,21 @@
         async function loadCulturePosts(sb) {
             const list = document.getElementById('culture-list');
 
-            // culture_posts가 아니라 통합 테이블 total_posts를 쓰는지 확인 필요
-            // 여기서는 기존과 동일하게 culture_posts 또는 total_posts 중
-            // admin.html에서 저장하는 테이블 이름('total_posts')으로 맞춥니다.
+            // admin.html과 동일한 total_posts 테이블 사용
             const { data, error } = await sb
-                .from('total_posts') // ★ admin.html과 테이블 이름 통일
+                .from('total_posts')
                 .select('*')
-                .eq('category', 'culture') // 카테고리가 'culture'인 것만 가져옴
+                .eq('category', 'culture') // 원어민 행사만 필터링
                 .order('created_at', { ascending: false });
 
             list.innerHTML = "";
 
             if (error || !data || data.length === 0) {
-                // 만약 데이터가 없으면 'culture_posts' 테이블도 한번 체크 (이전 버전 호환)
-                if (!data) checkOldTable(sb, list);
-                else list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`;
+                list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`;
                 return;
             }
 
             renderPosts(data, list);
-        }
-
-        // (호환성용) 혹시 이전 테이블(culture_posts)에 데이터가 있다면 가져오기
-        async function checkOldTable(sb, list) {
-            const { data, error } = await sb.from('culture_posts').select('*').order('created_at', { ascending: false });
-            if (data && data.length > 0) renderPosts(data, list);
-            else list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`;
         }
 
         // [게시글 그리기 함수]
@@ -411,15 +284,16 @@
                 const div = document.createElement('div');
                 div.className = 'card';
 
-                // ★ 클릭 이벤트 설정 (링크 있으면 이동, 없으면 팝업)
+                // ★ [수정됨] 클릭 이벤트: 팝업 대신 view.html로 이동
                 div.onclick = () => {
                     if (item.link_url && item.link_url.trim() !== "") {
-                        // http가 없으면 붙여주기
+                        // 외부 링크가 있으면 새 창으로 이동
                         let url = item.link_url;
                         if (!url.startsWith('http')) url = 'https://' + url;
                         window.open(url, '_blank');
                     } else {
-                        openModal(item);
+                        // 없으면 상세 페이지(view.html)로 이동
+                        location.href = `view.html?id=${item.id}`;
                     }
                 };
 
@@ -434,40 +308,6 @@
                     `;
                 list.appendChild(div);
             });
-        }
-
-        // [팝업 열기]
-        function openModal(item) {
-            document.getElementById('modal-title').innerText = item.title;
-            document.getElementById('modal-text').innerText = item.content;
-            document.getElementById('modal-date').innerText = item.created_at.split('T')[0];
-
-            const imgEl = document.getElementById('modal-img');
-
-            // 상세 이미지 처리 (JSON 배열일 수도 있고 단일 URL일 수도 있음)
-            let detailImg = item.image_url;
-            try {
-                const parsed = JSON.parse(item.image_url);
-                if (Array.isArray(parsed) && parsed.length > 0) detailImg = parsed[0]; // 첫장만 보여줌 (슬라이드 구현 시 수정 가능)
-            } catch (e) { }
-
-            if (detailImg) {
-                imgEl.src = detailImg;
-                imgEl.style.display = 'block';
-            } else {
-                imgEl.style.display = 'none';
-            }
-
-            document.getElementById('post-modal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-
-        // [팝업 닫기]
-        function closeModal(event) {
-            if (event.target === event.currentTarget || event.target.classList.contains('close-btn')) {
-                document.getElementById('post-modal').style.display = 'none';
-                document.body.style.overflow = 'auto';
-            }
         }
     </script>
 </body>
