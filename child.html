@@ -119,6 +119,7 @@
             display: flex;
             flex-direction: column;
             cursor: pointer;
+            position: relative;
         }
 
             .product-card:hover {
@@ -149,6 +150,22 @@
             font-size: 3rem;
             color: rgba(255,255,255,0.9);
             display: none;
+        }
+
+        .link-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            z-index: 10;
         }
 
         .product-info {
@@ -245,18 +262,29 @@
                 if (yId) { displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`; isVideo = true; }
                 else if (!displayImg) { displayImg = 'https://via.placeholder.com/400x300?text=No+Image'; }
 
+                const linkIcon = item.link_url ? `<div class="link-icon">🔗</div>` : '';
+
                 const div = document.createElement('div');
                 div.className = 'product-card';
-                div.onclick = () => { location.href = `view.html?id=${item.id}`; };
+                div.onclick = () => {
+                    if (item.link_url && item.link_url.trim() !== "") {
+                        let url = item.link_url;
+                        if (!url.startsWith('http')) url = 'https://' + url;
+                        window.open(url, '_blank');
+                    } else {
+                        location.href = `view.html?id=${item.id}`;
+                    }
+                };
                 div.innerHTML = `
-                        <div class="product-img-wrap">
-                            <img src="${displayImg}" class="product-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
-                            <div class="play-icon" style="display:${isVideo ? 'block' : 'none'}">▶</div>
-                        </div>
-                        <div class="product-info">
-                            <h3 class="product-title">${item.title}</h3>
-                            <div class="product-desc">${item.content}</div>
-                        </div>`;
+                            ${linkIcon}
+                            <div class="product-img-wrap">
+                                <img src="${displayImg}" class="product-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
+                                <div class="play-icon" style="display:${isVideo ? 'block' : 'none'}">▶</div>
+                            </div>
+                            <div class="product-info">
+                                <h3 class="product-title">${item.title}</h3>
+                                <div class="product-desc">${item.content}</div>
+                            </div>`;
                 targetDiv.appendChild(div);
             });
             categories.forEach(cat => {
