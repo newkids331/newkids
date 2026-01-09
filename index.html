@@ -32,6 +32,7 @@
         /* 카드 그리드 공통 */
         .main-grid {
             display: grid;
+            /* 화면 크기에 따라 자동 조절 (최소 280px) */
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 30px;
         }
@@ -70,6 +71,7 @@
             color: #666;
             margin-bottom: 20px;
             font-size: 0.95rem;
+            word-break: keep-all; /* 단어 단위 줄바꿈 */
         }
 
         .card-link {
@@ -89,7 +91,6 @@
                 color: #fff;
                 margin-bottom: 10px;
             }
-        /* 하단 텍스트 삭제됨 */
 
         /* 버튼 그룹 스타일 */
         .btn-group {
@@ -134,25 +135,48 @@
     <section id="curriculum">
         <div class="container">
             <h2>뉴키즈 교육 프로그램</h2>
-            <p class="section-desc">영아부터 유아까지, 5가지 핵심 영역의 통합 교육 솔루션</p>
+            <p class="section-desc">영아부터 유아까지, 6가지 핵심 영역의 통합 교육 솔루션</p>
 
             <div class="main-grid">
                 <a href="child.html#korean" class="card">
                     <div class="card-icon">📚</div>
-                    <h3>한글 & 누리과정</h3>
+                    <h3>한글 & 독서</h3>
                     <p>언어 능력과 바른 인성을 기르는<br>기초 탄탄 프로그램</p>
                     <span class="card-link">자세히 보기 &rarr;</span>
                 </a>
+
+                <a href="child.html#art" class="card">
+                    <div class="card-icon">🎨</div>
+                    <h3>미술 & 자연 환경</h3>
+                    <p>오감을 자극하고 자연을 배우는<br>창의 예술 활동</p>
+                    <span class="card-link">자세히 보기 &rarr;</span>
+                </a>
+
+                <a href="child.html#science" class="card">
+                    <div class="card-icon">🔬</div>
+                    <h3>수학 & 과학</h3>
+                    <p>호기심을 해결하고<br>논리적 사고를 키우는 탐구 활동</p>
+                    <span class="card-link">자세히 보기 &rarr;</span>
+                </a>
+
+                <a href="child.html#coding" class="card">
+                    <div class="card-icon">💻</div>
+                    <h3>코딩 & 직업교육</h3>
+                    <p>논리적 사고력과 미래 직업을<br>미리 체험하는 융합 교육</p>
+                    <span class="card-link">자세히 보기 &rarr;</span>
+                </a>
+
                 <a href="child.html#english" class="card">
                     <div class="card-icon">🔤</div>
-                    <h3>글로벌 영어</h3>
+                    <h3>영어 & 지도</h3>
                     <p>말하기, 듣기, 쓰기가 즐거워지는<br>액티비티 통합 영어</p>
                     <span class="card-link">자세히 보기 &rarr;</span>
                 </a>
-                <a href="child.html#art" class="card">
-                    <div class="card-icon">🎨</div>
-                    <h3>창의 융합</h3>
-                    <p>미술, 과학, 코딩으로 키우는<br>상상력과 논리적 사고</p>
+
+                <a href="child.html#integrated" class="card">
+                    <div class="card-icon">👶</div>
+                    <h3>통합보육 & 누리과정</h3>
+                    <p>영유아의 균형 잡힌 성장을 돕는<br>표준보육과정 통합 프로그램</p>
                     <span class="card-link">자세히 보기 &rarr;</span>
                 </a>
             </div>

@@ -141,10 +141,11 @@
             const { data, error } = await sb.from('total_posts').select('*').eq('id', POST_ID).single();
             if (error || !data) return alert("글을 찾을 수 없습니다.");
 
+            // [수정됨] 상세 페이지 카테고리 이름 변경
             const catNames = {
                 'season': '시즌행사', 'culture': '원어민행사', 'performance': '부모참여',
-                'korean': '한글/누리', 'art': '미술 & 자연 환경', 'science': '과학/수학',
-                'coding': '코딩 & 직업', 'english': '영어', 'integrated': '통합보육'
+                'korean': '한글 & 독서', 'art': '미술 & 자연 환경', 'science': '과학',
+                'coding': '코딩 & 직업교육', 'english': '영어 & 지도', 'integrated': '통합보육 & 누리과정'
             };
             document.getElementById('v-category').innerText = catNames[data.category] || data.category;
             document.getElementById('v-title').innerText = data.title;
@@ -152,8 +153,6 @@
             document.getElementById('v-content').innerText = data.content;
 
             const mediaWrap = document.getElementById('v-media-wrap');
-
-            // 상세 이미지는 'image_url' 컬럼에 저장됨
             let imgList = [];
             try {
                 const parsed = JSON.parse(data.image_url);
