@@ -94,23 +94,18 @@
 </head>
 <body>
     <header></header>
-
     <section class="sub-hero">
         <div class="container">
             <h1>원어민 행사</h1>
             <p>세계 여러 나라의 문화를 원어민 선생님과 생생하게 경험해요!</p>
         </div>
     </section>
-
     <section style="background-color: var(--bg-light);">
         <div class="container">
             <h2 style="text-align: left; margin-bottom: 30px;">📸 활동 갤러리</h2>
-            <div id="post-list" class="gallery-grid">
-                <div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px;">로딩 중...</div>
-            </div>
+            <div id="post-list" class="gallery-grid"><div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px;">로딩 중...</div></div>
         </div>
     </section>
-
     <section style="text-align: center; background-color: var(--primary-color); color: #fff;">
         <div class="container">
             <h2 style="color: #fff;">특별한 원어민 행사를 계획 중이신가요?</h2>
@@ -118,53 +113,41 @@
             <a href="proposal.html" class="btn-cta">📋 견적 및 상담 신청</a>
         </div>
     </section>
-
     <footer></footer>
     <script src="manager.js"></script>
     <script>
         const CATEGORY_NAME = 'culture';
-
         document.addEventListener("DOMContentLoaded", function () {
             const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadPosts(window.sb); } }, 100);
         });
-
         function getYoutubeId(url) {
             if (!url) return null;
             const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
             return (match && match[7].length === 11) ? match[7] : null;
         }
-
         async function loadPosts(sb) {
             const { data } = await sb.from('total_posts').select('*').eq('category', CATEGORY_NAME).order('created_at', { ascending: false });
             const list = document.getElementById('post-list');
             list.innerHTML = "";
-
-            if (!data || data.length === 0) {
-                list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`;
-                return;
-            }
-
+            if (!data || data.length === 0) { list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`; return; }
             data.forEach(item => {
-                let imgUrl = item.image_url;
+                let displayImg = item.thumbnail_url;
+                if (!displayImg) {
+                    try { const parsed = JSON.parse(item.image_url); if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0]; else displayImg = item.image_url; } catch (e) { displayImg = item.image_url; }
+                }
                 let isVideo = false;
-                const yId = getYoutubeId(imgUrl);
-                if (yId) { imgUrl = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`; isVideo = true; }
-                else if (!imgUrl) { imgUrl = 'https://via.placeholder.com/400x300?text=No+Image'; }
-
+                const yId = getYoutubeId(displayImg);
+                if (yId) { displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`; isVideo = true; }
+                else if (!displayImg) { displayImg = 'https://via.placeholder.com/400x300?text=No+Image'; }
                 const div = document.createElement('div');
                 div.className = 'card';
-                // [수정됨] 상세 페이지로 이동
                 div.onclick = () => { location.href = `view.html?id=${item.id}`; };
-
                 div.innerHTML = `
                         <div class="card-img-wrap">
-                            <img src="${imgUrl}" class="card-img">
+                            <img src="${displayImg}" class="card-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
                             <div class="play-icon" style="display:${isVideo ? 'block' : 'none'}">▶</div>
                         </div>
-                        <div class="card-body">
-                            <div class="card-title">${item.title}</div>
-                            <div class="card-text">${item.content}</div>
-                        </div>`;
+                        <div class="card-body"><div class="card-title">${item.title}</div><div class="card-text">${item.content}</div></div>`;
                 list.appendChild(div);
             });
         }

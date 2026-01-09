@@ -93,11 +93,29 @@
             margin-top: 10px;
         }
 
-        /* 리스트 스타일 */
         #manage-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 20px;
+        }
+
+        .filter-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .filter-select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            width: 200px;
         }
 
         .post-card {
@@ -129,6 +147,15 @@
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: white;
+            margin-bottom: 8px;
         }
 
         .post-actions {
@@ -175,11 +202,15 @@
             color: #1a3c6e;
             font-size: 1.5rem;
         }
+
+        .thumb-label {
+            color: #e76f51;
+        }
     </style>
 </head>
 <body>
     <header></header>
-    <div id="loading" class="loading-overlay">업로드 중입니다...<br>(사진이 많으면 시간이 걸릴 수 있습니다)</div>
+    <div id="loading" class="loading-overlay">처리 중입니다...</div>
     <div class="container">
         <div id="login-section">
             <h2>🔒 관리자 로그인</h2>
@@ -209,12 +240,14 @@
                 <label>제목</label>
                 <input type="text" id="post-title" placeholder="제목">
 
-                <label>사진 (여러 장 선택 가능) 또는 유튜브 주소</label>
+                <label class="thumb-label">🖼️ 대표 썸네일 (목록용 사진 1장)</label>
+                <input type="file" id="post-thumb-file" accept="image/*">
+                <p style="font-size:0.8rem; color:#888; margin-top:5px;">※ 비워두면 상세 내용의 첫 번째 사진이 썸네일로 사용됩니다.</p>
+
+                <label>📄 상세 내용 사진 (여러 장 선택 가능)</label>
                 <input type="file" id="post-file" accept="image/*" multiple>
                 <input type="text" id="youtube-url" placeholder="또는 유튜브 링크 (https://youtu.be/...)" style="margin-top:5px;">
-                <p style="font-size:0.8rem; color:#666; margin-top:5px;">💡 사진을 여러 장 올리려면 파일 선택 창에서 드래그하거나 Ctrl 키를 누르고 선택하세요.</p>
 
-                <p id="current-file-msg" style="font-size:0.8rem; color:#28a745; display:none; margin-top:5px;">✅ 이전에 저장된 이미지가 있습니다. (새로 올리면 교체됩니다)</p>
                 <label>내용</label>
                 <textarea id="post-content" placeholder="내용"></textarea>
                 <button id="btn-submit" onclick="savePost()" class="btn-action">업로드</button>
@@ -223,7 +256,24 @@
             </div>
 
             <div class="panel-box" style="background:transparent; padding:0; box-shadow:none;">
-                <h2 style="background:white; padding:20px; border-radius:10px;">🗑️ 전체 게시글 관리</h2>
+                <div class="filter-area">
+                    <h2 style="margin:0; border:none; padding:0;">🗑️ 전체 게시글 관리</h2>
+                    <select id="filter-category" class="filter-select" onchange="filterList()">
+                        <option value="all">📂 전체 보기</option>
+                        <optgroup label="행사 프로그램">
+                            <option value="season">🎉 시즌 테마</option>
+                            <option value="culture">🌍 원어민</option>
+                            <option value="performance">👨‍👩‍👧‍👦 부모 참여</option>
+                        </optgroup>
+                        <optgroup label="교재 프로그램">
+                            <option value="korean">📚 한글</option>
+                            <option value="art">🎨 미술</option>
+                            <option value="science">🔬 과학</option>
+                            <option value="coding">💻 코딩</option>
+                            <option value="english">🔤 영어</option>
+                        </optgroup>
+                    </select>
+                </div>
                 <div id="manage-list"></div>
             </div>
         </div>
@@ -231,7 +281,9 @@
     <footer></footer>
     <script src="manager.js"></script>
     <script>
-        let editingId = null; let originalImageUrl = null;
+        let editingId = null;
+        let originalDetailUrl = null;
+        let originalThumbUrl = null;
 
         document.addEventListener("DOMContentLoaded", function () {
             const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); checkSession(window.sb); } }, 100);
@@ -258,45 +310,53 @@
         }
         async function logout() { await window.sb.auth.signOut(); location.reload(); }
 
-        // [핵심 수정] 다중 파일 업로드 처리
         async function savePost() {
             const sb = window.sb;
             const category = document.getElementById('post-category').value;
             const title = document.getElementById('post-title').value;
             const content = document.getElementById('post-content').value;
-            const fileInput = document.getElementById('post-file');
-            const files = fileInput.files; // 여러 파일 가져오기
+
+            const thumbInput = document.getElementById('post-thumb-file');
+            const detailInput = document.getElementById('post-file');
             const youtube = document.getElementById('youtube-url').value;
 
             if (!title || !content) return alert("제목과 내용은 필수입니다.");
             document.getElementById('loading').style.display = 'block';
 
-            let finalUrlData = originalImageUrl; // 기존 데이터 유지
+            let finalThumbUrl = originalThumbUrl;
+            let finalDetailUrl = originalDetailUrl;
 
             try {
-                // 1. 새 파일들이 선택된 경우
-                if (files.length > 0) {
+                if (thumbInput.files.length > 0) {
+                    const file = thumbInput.files[0];
+                    const fileName = `thumb_${Date.now()}_${file.name}`;
+                    const { error } = await sb.storage.from('images').upload(fileName, file);
+                    if (error) throw error;
+                    const { data } = sb.storage.from('images').getPublicUrl(fileName);
+                    finalThumbUrl = data.publicUrl;
+                }
+
+                if (detailInput.files.length > 0) {
                     let uploadedUrls = [];
-                    for (let i = 0; i < files.length; i++) {
-                        const file = files[i];
-                        const fileName = `${category}_${Date.now()}_${i}_${file.name}`;
+                    for (let i = 0; i < detailInput.files.length; i++) {
+                        const file = detailInput.files[i];
+                        const fileName = `detail_${Date.now()}_${i}_${file.name}`;
                         const { error } = await sb.storage.from('images').upload(fileName, file);
                         if (error) throw error;
                         const { data } = sb.storage.from('images').getPublicUrl(fileName);
                         uploadedUrls.push(data.publicUrl);
                     }
-                    // 배열을 문자열(JSON)로 변환해서 저장
-                    finalUrlData = JSON.stringify(uploadedUrls);
-                }
-                // 2. 유튜브 링크가 있는 경우
-                else if (youtube) {
-                    finalUrlData = youtube;
+                    finalDetailUrl = JSON.stringify(uploadedUrls);
+                } else if (youtube) {
+                    finalDetailUrl = youtube;
                 }
 
-                // 새 글인데 아무것도 안 올렸으면 null
-                if (!editingId && files.length === 0 && !youtube) finalUrlData = null;
+                if (!editingId) {
+                    if (thumbInput.files.length === 0) finalThumbUrl = null;
+                    if (detailInput.files.length === 0 && !youtube) finalDetailUrl = null;
+                }
 
-                const postData = { category, title, content, image_url: finalUrlData };
+                const postData = { category, title, content, thumbnail_url: finalThumbUrl, image_url: finalDetailUrl };
 
                 if (editingId) {
                     await sb.from('total_posts').update(postData).eq('id', editingId);
@@ -305,10 +365,12 @@
                     await sb.from('total_posts').insert([postData]);
                     alert("업로드 완료!");
                 }
-                cancelEdit(); loadManageList(sb);
+                cancelEdit(); filterList();
             } catch (e) { alert("오류 발생: " + e.message); }
             document.getElementById('loading').style.display = 'none';
         }
+
+        function filterList() { loadManageList(window.sb); }
 
         function getYoutubeId(url) {
             if (!url) return null;
@@ -316,28 +378,38 @@
             return (match && match[7].length === 11) ? match[7] : null;
         }
 
-        // [수정] 썸네일 표시 로직 (배열 처리 추가)
         async function loadManageList(sb) {
+            const filterValue = document.getElementById('filter-category').value;
             const listDiv = document.getElementById('manage-list');
-            const { data, error } = await sb.from('total_posts').select('*').order('created_at', { ascending: false });
+            listDiv.innerHTML = "<p style='grid-column:1/-1;text-align:center;'>로딩 중...</p>";
+
+            let query = sb.from('total_posts').select('*');
+            if (filterValue !== 'all') query = query.eq('category', filterValue);
+
+            const { data, error } = await query.order('created_at', { ascending: false });
             if (error || !data) { listDiv.innerHTML = "<p>로딩 실패</p>"; return; }
             listDiv.innerHTML = "";
 
+            const badgeColors = { 'season': '#4cc9f0', 'culture': '#1a3c6e', 'performance': '#f4a261', 'korean': '#e76f51', 'art': '#f4a261', 'science': '#457b9d', 'coding': '#7209b7', 'english': '#1a3c6e' };
+            const catNames = { 'season': '시즌', 'culture': '원어민', 'performance': '부모참여', 'korean': '한글', 'art': '미술', 'science': '과학', 'coding': '코딩', 'english': '영어' };
+
             data.forEach(item => {
-                let thumbSrc = "";
-                // 이미지가 JSON 배열(여러장)인지 확인
-                try {
-                    const parsed = JSON.parse(item.image_url);
-                    if (Array.isArray(parsed) && parsed.length > 0) thumbSrc = parsed[0]; // 첫번째 사진
-                } catch (e) {
-                    // 배열이 아니면(옛날 데이터거나 유튜브) 그냥 씀
-                    thumbSrc = item.image_url;
+                const color = badgeColors[item.category] || '#999';
+                const catName = catNames[item.category] || item.category;
+
+                let displayImg = item.thumbnail_url;
+                if (!displayImg) {
+                    try {
+                        const parsed = JSON.parse(item.image_url);
+                        if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0];
+                        else displayImg = item.image_url;
+                    } catch (e) { displayImg = item.image_url; }
                 }
 
-                const yId = getYoutubeId(thumbSrc);
+                const yId = getYoutubeId(displayImg);
                 let imgHtml = "";
                 if (yId) imgHtml = `<img src="https://img.youtube.com/vi/${yId}/hqdefault.jpg" class="post-thumb">`;
-                else if (thumbSrc) imgHtml = `<img src="${thumbSrc}" class="post-thumb">`;
+                else if (displayImg) imgHtml = `<img src="${displayImg}" class="post-thumb">`;
                 else imgHtml = `<div class="post-thumb" style="display:flex;align-items:center;justify-content:center;color:#999;">이미지 없음</div>`;
 
                 const itemStr = encodeURIComponent(JSON.stringify(item));
@@ -345,8 +417,8 @@
                         <div class="post-card">
                             ${imgHtml}
                             <div class="post-info">
+                                <span class="category-badge" style="background:${color}">${catName}</span>
                                 <div class="post-title">${item.title}</div>
-                                <span style="font-size:0.8rem; color:#666;">${item.category}</span>
                             </div>
                             <div class="post-actions">
                                 <button onclick="startEdit('${itemStr}')" class="btn-edit">수정</button>
@@ -358,23 +430,26 @@
 
         function startEdit(itemStr) {
             const item = JSON.parse(decodeURIComponent(itemStr));
-            editingId = item.id; originalImageUrl = item.image_url;
+            editingId = item.id;
+            originalDetailUrl = item.image_url;
+            originalThumbUrl = item.thumbnail_url;
             document.getElementById('post-category').value = item.category;
             document.getElementById('post-title').value = item.title;
             document.getElementById('post-content').value = item.content;
-            document.getElementById('youtube-url').value = ""; document.getElementById('post-file').value = "";
-            document.getElementById('form-title').innerText = "✏️ 수정 중...";
+            document.getElementById('youtube-url').value = "";
+            document.getElementById('post-file').value = "";
+            document.getElementById('post-thumb-file').value = "";
+            document.getElementById('form-title').innerText = "✏️ 게시글 수정 중";
             document.getElementById('btn-submit').innerText = "수정 완료";
             document.getElementById('btn-cancel-edit').style.display = 'block';
-            if (item.image_url) document.getElementById('current-file-msg').style.display = 'block';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function cancelEdit() {
-            editingId = null; originalImageUrl = null;
+            editingId = null; originalDetailUrl = null; originalThumbUrl = null;
             document.getElementById('post-title').value = ""; document.getElementById('post-content').value = "";
-            document.getElementById('post-file').value = ""; document.getElementById('youtube-url').value = "";
-            document.getElementById('current-file-msg').style.display = 'none';
+            document.getElementById('post-file').value = ""; document.getElementById('post-thumb-file').value = "";
+            document.getElementById('youtube-url').value = "";
             document.getElementById('form-title').innerText = "📝 새 글 작성하기";
             document.getElementById('btn-submit').innerText = "업로드";
             document.getElementById('btn-cancel-edit').style.display = 'none';

@@ -1,11 +1,9 @@
 // manager.js - 통합 관리자 (최종 설정 적용됨)
 
-// [원장님 설정 값]
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxSplFkhOWrcL9CQbdXThqKJ4InlADs3gurAU3MORok5Xh7Q_dUAi3slQprB5wfQ40Y/exec";
-const LOGO_IMAGE_URL = "https://n-kids.github.io/newkids/logo.png";
+const LOGO_IMAGE_URL = "https://newkids331.github.io/newkids/logo.png";
 const SUPABASE_URL = "https://jmdyqdckclgfyimqpqce.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptZHlxZGNrY2xnZnlpbXFwcWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTA5NzksImV4cCI6MjA4MzUyNjk3OX0.hcYPN3Iz5es4Ksye5QMF83yVQVzRHQUw0cxFCAvMVrw";
-// (참고: 키 뒷부분이 살짝 잘린 것 같으면 원본을 다시 확인해주세요. 위 코드는 보내주신 그대로 넣었습니다.)
 
 const DEFAULT_INFO = {
     company: "(주)뉴키즈",
@@ -14,7 +12,6 @@ const DEFAULT_INFO = {
     phone: "010-2333-2563 / 010-5522-8109"
 };
 
-// [0] 초기화: 뷰포트 및 Supabase 연결
 (function initSystem() {
     if (!document.querySelector('meta[name="viewport"]')) {
         const meta = document.createElement('meta');
@@ -27,14 +24,6 @@ const DEFAULT_INFO = {
     }
 })();
 
-// [1] 데이터 로딩 (필요시 텍스트 변경 기능)
-async function loadDataFromSheet() {
-    try {
-        // 데이터 로딩 로직 (현재는 사용하지 않더라도 구조 유지)
-    } catch (error) { console.error("설정 로딩 실패:", error); }
-}
-
-// [2] 헤더 생성 (메뉴 구성)
 function loadHeader() {
     const style = document.createElement('style');
     style.innerHTML = `
@@ -54,7 +43,6 @@ function loadHeader() {
         header { width: 100%; height: 70px; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,0.05); position: fixed; top: 0; left: 0; z-index: 9999; }
         .header-inner { display: flex; justify-content: space-between; align-items: center; height: 100%; max-width: 1100px; margin: 0 auto; padding: 0 20px; }
         .logo-img { max-height: 45px; width: auto; }
-        
         ul.nav-menu { display: flex; gap: 30px; }
         .nav-menu > li { position: relative; padding: 20px 0; }
         .nav-menu > li > a { font-size: 1.05rem; font-weight: 600; color: #333; }
@@ -64,7 +52,6 @@ function loadHeader() {
         @media (min-width: 769px) { .nav-menu li:hover .dropdown { display: block; } }
         .dropdown li a { display: block; padding: 10px 15px; font-size: 0.95rem; color: #555; text-align: center; }
         .dropdown li a:hover { background: #f8f9fa; color: #f4a261; font-weight: bold; }
-        
         .mobile-btn { display: none; font-size: 1.8rem; background: none; border: none; cursor: pointer; color: #1a3c6e; padding: 10px; }
         @media (max-width: 768px) {
             .mobile-btn { display: block !important; }
@@ -115,7 +102,6 @@ function loadHeader() {
 window.toggleMenu = function () { document.getElementById('navMenu').classList.toggle('active'); };
 window.toggleSubMenu = function (el) { if (window.innerWidth <= 768) el.parentElement.classList.toggle('sub-open'); };
 
-// [3] 푸터 생성
 function loadFooter() {
     const footerEl = document.querySelector('footer');
     if (footerEl) {
@@ -136,13 +122,9 @@ function loadFooter() {
     }
 }
 
-// [4] 실행
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();
-    loadDataFromSheet();
-
-    // 외부 클릭 시 모바일 메뉴 닫기
     document.addEventListener('click', function (e) {
         const menu = document.getElementById('navMenu');
         const btn = document.querySelector('.mobile-btn');
