@@ -1,7 +1,7 @@
 // manager.js - 통합 관리자 (최종 설정 적용됨)
 
 const SHEET_URL = "https://script.google.com/macros/s/AKfycbxSplFkhOWrcL9CQbdXThqKJ4InlADs3gurAU3MORok5Xh7Q_dUAi3slQprB5wfQ40Y/exec";
-const LOGO_IMAGE_URL = "https://newkids331.github.io/newkids/logo.png";
+const LOGO_IMAGE_URL = "https://n-kids.github.io/newkids/logo.png";
 const SUPABASE_URL = "https://jmdyqdckclgfyimqpqce.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImptZHlxZGNrY2xnZnlpbXFwcWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc5NTA5NzksImV4cCI6MjA4MzUyNjk3OX0.hcYPN3Iz5es4Ksye5QMF83yVQVzRHQUw0cxFCAvMVrw";
 
