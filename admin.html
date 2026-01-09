@@ -263,7 +263,10 @@
 
                 <label>📄 상세 내용 사진 (여러 장 선택 가능)</label>
                 <input type="file" id="post-file" accept="image/*" multiple>
-                <input type="text" id="youtube-url" placeholder="또는 유튜브 링크 (https://youtu.be/...)" style="margin-top:5px;">
+
+                <input type="text" id="youtube-url" placeholder="유튜브 링크 (https://youtu.be/...)" style="margin-top:10px;">
+                <input type="text" id="post-link" placeholder="🔗 관련 외부 사이트 링크 (예: https://naver.com)" style="margin-top:10px; border-color: #4cc9f0;">
+                <p style="font-size:0.8rem; color:#888; margin-top:5px;">※ 외부 링크를 입력하면 게시글 클릭 시 해당 사이트로 이동하게 만들 수 있습니다.</p>
 
                 <label>내용</label>
                 <textarea id="post-content" placeholder="내용을 입력하세요"></textarea>
@@ -306,7 +309,7 @@
         let originalDetailUrl = null;
         let originalThumbUrl = null;
 
-        // [1] 초기화: manager.js의 window.sb가 로드될 때까지 대기
+        // [1] 초기화
         document.addEventListener("DOMContentLoaded", function () {
             const checkSb = setInterval(() => {
                 if (window.sb) {
@@ -348,10 +351,9 @@
             location.reload();
         }
 
-        // [5] 파일명 안전하게 변경하는 함수 (한글 깨짐 방지)
+        // [5] 파일명 안전하게 변경하는 함수
         function getSafeFileName(originalName, prefix) {
             const ext = originalName.split('.').pop();
-            // thumb_1723456789_a1b2c3d4.png 형식으로 변환
             return `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 10)}.${ext}`;
         }
 
@@ -366,12 +368,13 @@
             const thumbInput = document.getElementById('post-thumb-file');
             const detailInput = document.getElementById('post-file');
             const youtube = document.getElementById('youtube-url').value;
+            // [추가] 외부 링크 값 가져오기
+            const linkUrl = document.getElementById('post-link').value;
 
             if (!title || !content) return alert("제목과 내용은 필수입니다.");
 
             document.getElementById('loading').style.display = 'block';
 
-            // 기존 URL 유지 (수정 시)
             let finalThumbUrl = originalThumbUrl;
             let finalDetailUrl = originalDetailUrl;
 
@@ -379,48 +382,42 @@
                 // A. 썸네일 업로드
                 if (thumbInput.files.length > 0) {
                     const file = thumbInput.files[0];
-                    const fileName = getSafeFileName(file.name, 'thumb'); // 안전한 파일명 생성
-
+                    const fileName = getSafeFileName(file.name, 'thumb');
                     const { error } = await sb.storage.from('images').upload(fileName, file);
                     if (error) throw error;
-
                     const { data } = sb.storage.from('images').getPublicUrl(fileName);
                     finalThumbUrl = data.publicUrl;
                 }
 
-                // B. 상세 이미지 업로드 (여러 장)
+                // B. 상세 이미지 업로드
                 if (detailInput.files.length > 0) {
                     let uploadedUrls = [];
                     for (let i = 0; i < detailInput.files.length; i++) {
                         const file = detailInput.files[i];
-                        const fileName = getSafeFileName(file.name, `detail_${i}`); // 안전한 파일명 생성
-
+                        const fileName = getSafeFileName(file.name, `detail_${i}`);
                         const { error } = await sb.storage.from('images').upload(fileName, file);
                         if (error) throw error;
-
                         const { data } = sb.storage.from('images').getPublicUrl(fileName);
                         uploadedUrls.push(data.publicUrl);
                     }
-                    // 배열을 문자열(JSON)로 저장
                     finalDetailUrl = JSON.stringify(uploadedUrls);
                 } else if (youtube) {
-                    // 이미지가 없고 유튜브 링크만 입력했을 때
                     finalDetailUrl = youtube;
                 }
 
-                // C. 신규 작성인데 이미지를 안 올린 경우 처리
                 if (!editingId) {
                     if (thumbInput.files.length === 0) finalThumbUrl = null;
                     if (detailInput.files.length === 0 && !youtube) finalDetailUrl = null;
                 }
 
-                // D. DB 저장 데이터 구성
+                // D. DB 저장 데이터 구성 (link_url 추가됨)
                 const postData = {
                     category: category,
                     title: title,
                     content: content,
                     thumbnail_url: finalThumbUrl,
-                    image_url: finalDetailUrl
+                    image_url: finalDetailUrl,
+                    link_url: linkUrl // [추가]
                 };
 
                 // E. DB Insert 또는 Update
@@ -432,8 +429,8 @@
                     alert("업로드 완료!");
                 }
 
-                cancelEdit(); // 폼 초기화
-                filterList(); // 목록 갱신
+                cancelEdit();
+                filterList();
 
             } catch (e) {
                 console.error(e);
@@ -475,7 +472,6 @@
 
             listDiv.innerHTML = "";
 
-            // 배지 색상 매핑
             const badgeColors = {
                 'season': '#4cc9f0', 'culture': '#1a3c6e', 'performance': '#f4a261',
                 'korean': '#e76f51', 'art': '#f4a261', 'science': '#457b9d', 'coding': '#7209b7', 'english': '#1a3c6e'
@@ -489,39 +485,31 @@
                 const color = badgeColors[item.category] || '#999';
                 const catName = catNames[item.category] || item.category;
 
-                // 대표 이미지 결정 로직
                 let displayImg = item.thumbnail_url;
                 if (!displayImg) {
-                    // 썸네일 없으면 상세 이미지 중 첫 번째 사용
                     try {
                         const parsed = JSON.parse(item.image_url);
                         if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0];
                         else displayImg = item.image_url;
-                    } catch (e) {
-                        displayImg = item.image_url;
-                    }
+                    } catch (e) { displayImg = item.image_url; }
                 }
 
-                // 이미지 태그 생성
                 const yId = getYoutubeId(displayImg);
                 let imgHtml = "";
+                if (yId) imgHtml = `<img src="https://img.youtube.com/vi/${yId}/hqdefault.jpg" class="post-thumb">`;
+                else if (displayImg) imgHtml = `<img src="${displayImg}" class="post-thumb" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">`;
+                else imgHtml = `<div class="post-thumb" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">이미지 없음</div>`;
 
-                if (yId) {
-                    imgHtml = `<img src="https://img.youtube.com/vi/${yId}/hqdefault.jpg" class="post-thumb">`;
-                } else if (displayImg) {
-                    imgHtml = `<img src="${displayImg}" class="post-thumb" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'">`;
-                } else {
-                    imgHtml = `<div class="post-thumb" style="display:flex;align-items:center;justify-content:center;color:#999;font-size:0.8rem;">이미지 없음</div>`;
-                }
+                // 링크 아이콘 추가 (링크가 있을 경우)
+                let linkBadge = item.link_url ? '<span style="font-size:12px; margin-left:5px;">🔗</span>' : '';
 
-                // 특수문자 처리를 위해 인코딩
                 const itemStr = encodeURIComponent(JSON.stringify(item));
 
                 listDiv.innerHTML += `
                             <div class="post-card">
                                 ${imgHtml}
                                 <div class="post-info">
-                                    <span class="category-badge" style="background:${color}">${catName}</span>
+                                    <span class="category-badge" style="background:${color}">${catName}</span> ${linkBadge}
                                     <div class="post-title">${item.title}</div>
                                 </div>
                                 <div class="post-actions">
@@ -542,19 +530,18 @@
             document.getElementById('post-category').value = item.category;
             document.getElementById('post-title').value = item.title;
             document.getElementById('post-content').value = item.content;
+            // [추가] 링크 값 불러오기
+            document.getElementById('post-link').value = item.link_url || "";
 
-            // 파일 입력창은 보안상 값 설정 불가하므로 초기화
             document.getElementById('post-file').value = "";
             document.getElementById('post-thumb-file').value = "";
             document.getElementById('youtube-url').value = "";
 
-            // UI 변경
             document.getElementById('form-title').innerText = "✏️ 게시글 수정 중";
             document.getElementById('form-title').style.color = "#e76f51";
             document.getElementById('btn-submit').innerText = "수정 완료";
             document.getElementById('btn-cancel-edit').style.display = 'block';
 
-            // 스크롤 위로
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -569,6 +556,8 @@
             document.getElementById('post-file').value = "";
             document.getElementById('post-thumb-file').value = "";
             document.getElementById('youtube-url').value = "";
+            // [추가] 링크 값 초기화
+            document.getElementById('post-link').value = "";
 
             document.getElementById('form-title').innerText = "📝 새 글 작성하기";
             document.getElementById('form-title').style.color = "#1a3c6e";
@@ -581,10 +570,9 @@
             if (confirm("정말 삭제하시겠습니까? 복구할 수 없습니다.")) {
                 const sb = window.sb;
                 const { error } = await sb.from('total_posts').delete().eq('id', id);
-
                 if (error) alert("삭제 실패: " + error.message);
                 else {
-                    if (editingId === id) cancelEdit(); // 수정 중인 글을 삭제했다면 폼 초기화
+                    if (editingId === id) cancelEdit();
                     loadManageList(sb);
                 }
             }

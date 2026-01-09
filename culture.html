@@ -2,19 +2,112 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>뉴키즈 - 원어민 행사</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 원어민 문화 체험</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        .sub-hero {
-            background: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1600&q=80') center/center no-repeat;
+        /* [기본 스타일] */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
+        body {
+            font-family: 'Pretendard', sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background: #fff;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        :root {
+            --primary-color: #1a3c6e;
+            --accent-color: #f4a261;
+            --bg-light: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        section {
+            padding: 80px 0;
+        }
+
+        /* [서브 배너] */
+        .sub-hero {
+            height: 350px;
+            background: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1600&q=80') center/center no-repeat;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #fff;
+            margin-top: 50px;
+        }
+
+            .sub-hero h1 {
+                font-size: 3.2rem;
+                font-weight: 800;
+                margin-bottom: 20px;
+                text-shadow: 0 4px 10px rgba(0,0,0,0.8);
+                letter-spacing: -1px;
+            }
+
+            .sub-hero p {
+                font-size: 1.4rem;
+                font-weight: 600;
+                color: #ffdca8;
+                text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+            }
+
+        /* [소개 박스] */
+        .intro-summary {
+            background-color: #fff;
+            text-align: center;
+            padding: 60px 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .intro-box {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 2px solid var(--primary-color);
+            padding: 40px;
+            border-radius: 15px;
+            background-color: #fff;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+        }
+
+            .intro-box h3 {
+                font-size: 1.6rem;
+                color: var(--primary-color);
+                margin-bottom: 20px;
+            }
+
+            .intro-box p {
+                font-size: 1.1rem;
+                color: #555;
+                word-break: keep-all;
+            }
+
+        /* [갤러리 그리드] */
         .gallery-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 30px;
         }
 
+        /* [카드 스타일] */
         .card {
             background: white;
             border-radius: 15px;
@@ -23,6 +116,10 @@
             transition: 0.3s;
             border: 1px solid #eee;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            max-width: 380px;
+            width: 100%;
+            margin: 0 auto;
+            position: relative; /* 아이콘 배치를 위해 */
         }
 
             .card:hover {
@@ -31,28 +128,11 @@
                 border-color: var(--accent-color);
             }
 
-        .card-img-wrap {
-            width: 100%;
-            height: 220px;
-            position: relative;
-            background: #f0f0f0;
-            overflow: hidden;
-        }
-
         .card-img {
             width: 100%;
-            height: 100%;
+            height: 220px;
             object-fit: cover;
-        }
-
-        .play-icon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 3rem;
-            color: rgba(255,255,255,0.9);
-            display: none;
+            background: #f0f0f0;
         }
 
         .card-body {
@@ -64,6 +144,9 @@
             font-size: 1.2rem;
             margin-bottom: 8px;
             color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .card-text {
@@ -73,83 +156,318 @@
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            margin-bottom: 10px;
         }
 
-        .btn-cta {
-            display: inline-block;
-            padding: 12px 30px;
-            background-color: #fff;
-            color: #1a3c6e;
-            border-radius: 5px;
-            font-weight: bold;
-            transition: 0.3s;
-            text-decoration: none;
+        .card-date {
+            font-size: 0.85rem;
+            color: #999;
+            text-align: right;
         }
 
-            .btn-cta:hover {
-                background-color: #f4a261;
-                color: #fff;
+        /* 외부 링크 표시 아이콘 */
+        .link-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        /* [팝업(모달) 스타일] */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            border-radius: 15px;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
             }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            position: relative;
+        }
+
+        .modal-img {
+            width: 100%;
+            height: auto;
+            display: block;
+            max-height: 400px;
+            object-fit: cover;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+            .close-btn:hover {
+                background: rgba(0,0,0,0.8);
+            }
+
+        .modal-body {
+            padding: 30px;
+        }
+
+        .modal-title {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            line-height: 1.3;
+        }
+
+        .modal-text {
+            font-size: 1.05rem;
+            color: #444;
+            white-space: pre-wrap;
+            line-height: 1.8;
+        }
+
+        .modal-date {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            color: #999;
+            text-align: right;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .sub-hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .sub-hero p {
+                font-size: 1.1rem;
+                padding: 0 20px;
+            }
+        }
     </style>
 </head>
 <body>
-    <header></header>
-    <section class="sub-hero">
-        <div class="container">
-            <h1>원어민 행사</h1>
+
+    <header></header> <section class="sub-hero">
+        <div>
+            <h1>원어민 문화 체험</h1>
             <p>세계 여러 나라의 문화를 원어민 선생님과 생생하게 경험해요!</p>
         </div>
     </section>
+
+    <section class="intro-summary">
+        <div class="intro-box">
+            <h3>🌍 글로벌 리더로 자라나는 첫걸음</h3>
+            <p>
+                매달 새로운 나라의 문화를 체험하며, 아이들의 시야를 넓혀줍니다.<br>
+                원어민 선생님과 함께하는 즐거운 놀이 활동을 통해<br>
+                자연스럽게 영어를 접하고 다문화 감수성을 키울 수 있습니다.
+            </p>
+        </div>
+    </section>
+
     <section style="background-color: var(--bg-light);">
         <div class="container">
-            <h2 style="text-align: left; margin-bottom: 30px;">📸 활동 갤러리</h2>
-            <div id="post-list" class="gallery-grid"><div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px;">로딩 중...</div></div>
+            <h2 style="text-align: left; margin-bottom: 30px;">📸 체험 활동 현장</h2>
+
+            <div id="culture-list" class="gallery-grid">
+                <div style="text-align:center; width:100%; grid-column: 1/-1; padding:50px; color:#666;">
+                    게시글을 불러오는 중입니다...
+                </div>
+            </div>
         </div>
     </section>
-    <section style="text-align: center; background-color: var(--primary-color); color: #fff;">
-        <div class="container">
-            <h2 style="color: #fff;">특별한 원어민 행사를 계획 중이신가요?</h2>
-            <p style="margin-bottom: 20px;">예산과 인원에 맞는 최적의 프로그램을 제안해 드립니다.</p>
-            <a href="proposal.html" class="btn-cta">📋 견적 및 상담 신청</a>
+
+    <div id="post-modal" class="modal-overlay" onclick="closeModal(event)">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close-btn" onclick="closeModal(event)">×</button>
+                <img id="modal-img" class="modal-img" src="" style="display:none;">
+            </div>
+            <div class="modal-body">
+                <h3 id="modal-title" class="modal-title"></h3>
+                <div id="modal-text" class="modal-text"></div>
+                <div id="modal-date" class="modal-date"></div>
+            </div>
         </div>
-    </section>
+    </div>
+
     <footer></footer>
     <script src="manager.js"></script>
+
     <script>
-        const CATEGORY_NAME = 'culture';
+        // [페이지 로드 및 데이터 실행]
         document.addEventListener("DOMContentLoaded", function () {
-            const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadPosts(window.sb); } }, 100);
-        });
-        function getYoutubeId(url) {
-            if (!url) return null;
-            const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
-            return (match && match[7].length === 11) ? match[7] : null;
-        }
-        async function loadPosts(sb) {
-            const { data } = await sb.from('total_posts').select('*').eq('category', CATEGORY_NAME).order('created_at', { ascending: false });
-            const list = document.getElementById('post-list');
-            list.innerHTML = "";
-            if (!data || data.length === 0) { list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`; return; }
-            data.forEach(item => {
-                let displayImg = item.thumbnail_url;
-                if (!displayImg) {
-                    try { const parsed = JSON.parse(item.image_url); if (Array.isArray(parsed) && parsed.length > 0) displayImg = parsed[0]; else displayImg = item.image_url; } catch (e) { displayImg = item.image_url; }
+            setTimeout(() => {
+                const sb = window.sb;
+                if (!sb) {
+                    document.getElementById('culture-list').innerHTML =
+                        "<div style='text-align:center; padding:50px;'>데이터 연결 오류</div>";
+                    return;
                 }
-                let isVideo = false;
-                const yId = getYoutubeId(displayImg);
-                if (yId) { displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`; isVideo = true; }
-                else if (!displayImg) { displayImg = 'https://via.placeholder.com/400x300?text=No+Image'; }
+                loadCulturePosts(sb);
+            }, 500);
+        });
+
+        // [게시글 목록 불러오기]
+        async function loadCulturePosts(sb) {
+            const list = document.getElementById('culture-list');
+
+            // culture_posts가 아니라 통합 테이블 total_posts를 쓰는지 확인 필요
+            // 여기서는 기존과 동일하게 culture_posts 또는 total_posts 중
+            // admin.html에서 저장하는 테이블 이름('total_posts')으로 맞춥니다.
+            const { data, error } = await sb
+                .from('total_posts') // ★ admin.html과 테이블 이름 통일
+                .select('*')
+                .eq('category', 'culture') // 카테고리가 'culture'인 것만 가져옴
+                .order('created_at', { ascending: false });
+
+            list.innerHTML = "";
+
+            if (error || !data || data.length === 0) {
+                // 만약 데이터가 없으면 'culture_posts' 테이블도 한번 체크 (이전 버전 호환)
+                if (!data) checkOldTable(sb, list);
+                else list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`;
+                return;
+            }
+
+            renderPosts(data, list);
+        }
+
+        // (호환성용) 혹시 이전 테이블(culture_posts)에 데이터가 있다면 가져오기
+        async function checkOldTable(sb, list) {
+            const { data, error } = await sb.from('culture_posts').select('*').order('created_at', { ascending: false });
+            if (data && data.length > 0) renderPosts(data, list);
+            else list.innerHTML = `<div style="text-align:center; grid-column:1/-1; padding:50px;">등록된 게시글이 없습니다.</div>`;
+        }
+
+        // [게시글 그리기 함수]
+        function renderPosts(data, list) {
+            data.forEach(item => {
+                const date = item.created_at ? item.created_at.split('T')[0] : "";
+
+                // 이미지 처리
+                let imgUrl = item.thumbnail_url;
+                if (!imgUrl) {
+                    try {
+                        const parsed = JSON.parse(item.image_url);
+                        if (Array.isArray(parsed) && parsed.length > 0) imgUrl = parsed[0];
+                        else imgUrl = item.image_url;
+                    } catch (e) { imgUrl = item.image_url; }
+                }
+                if (!imgUrl) imgUrl = 'https://via.placeholder.com/400x300?text=No+Image';
+
+                // 링크 아이콘 표시 (링크가 있으면)
+                const linkIcon = item.link_url ? `<div class="link-icon">🔗</div>` : '';
+
                 const div = document.createElement('div');
                 div.className = 'card';
-                div.onclick = () => { location.href = `view.html?id=${item.id}`; };
+
+                // ★ 클릭 이벤트 설정 (링크 있으면 이동, 없으면 팝업)
+                div.onclick = () => {
+                    if (item.link_url && item.link_url.trim() !== "") {
+                        // http가 없으면 붙여주기
+                        let url = item.link_url;
+                        if (!url.startsWith('http')) url = 'https://' + url;
+                        window.open(url, '_blank');
+                    } else {
+                        openModal(item);
+                    }
+                };
+
                 div.innerHTML = `
-                        <div class="card-img-wrap">
-                            <img src="${displayImg}" class="card-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
-                            <div class="play-icon" style="display:${isVideo ? 'block' : 'none'}">▶</div>
+                        ${linkIcon}
+                        <img src="${imgUrl}" class="card-img" onerror="this.src='https://via.placeholder.com/400x300?text=Error'">
+                        <div class="card-body">
+                            <div class="card-title">${item.title}</div>
+                            <div class="card-text">${item.content}</div>
+                            <div class="card-date">${date}</div>
                         </div>
-                        <div class="card-body"><div class="card-title">${item.title}</div><div class="card-text">${item.content}</div></div>`;
+                    `;
                 list.appendChild(div);
             });
+        }
+
+        // [팝업 열기]
+        function openModal(item) {
+            document.getElementById('modal-title').innerText = item.title;
+            document.getElementById('modal-text').innerText = item.content;
+            document.getElementById('modal-date').innerText = item.created_at.split('T')[0];
+
+            const imgEl = document.getElementById('modal-img');
+
+            // 상세 이미지 처리 (JSON 배열일 수도 있고 단일 URL일 수도 있음)
+            let detailImg = item.image_url;
+            try {
+                const parsed = JSON.parse(item.image_url);
+                if (Array.isArray(parsed) && parsed.length > 0) detailImg = parsed[0]; // 첫장만 보여줌 (슬라이드 구현 시 수정 가능)
+            } catch (e) { }
+
+            if (detailImg) {
+                imgEl.src = detailImg;
+                imgEl.style.display = 'block';
+            } else {
+                imgEl.style.display = 'none';
+            }
+
+            document.getElementById('post-modal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // [팝업 닫기]
+        function closeModal(event) {
+            if (event.target === event.currentTarget || event.target.classList.contains('close-btn')) {
+                document.getElementById('post-modal').style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }
         }
     </script>
 </body>
