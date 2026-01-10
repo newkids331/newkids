@@ -95,7 +95,7 @@
                     loadProposalItems(window.sb);
                 } else if (attempts > 50) {
                     clearInterval(checkSb);
-                    document.getElementById('loading-msg').innerText = "데이터 로딩 실패 (서버 연결 불가)";
+                    document.getElementById('loading-msg').innerText = "데이터 로딩 실패";
                 }
             }, 100);
         });
@@ -127,31 +127,31 @@
                 const createGroupHTML = (title, categories) => {
                     let groupHtml = `<div class="category-wrapper">`;
                     groupHtml += `   <div class="proposal-category-header" onclick="toggleProposalCategory(this)">
-                                                <span>${title}</span> <span class="toggle-icon">▼</span>
-                                            </div>`;
+                                            <span>${title}</span> <span class="toggle-icon">▼</span>
+                                        </div>`;
                     groupHtml += `   <div class="proposal-category-content">`;
 
                     let hasItem = false;
                     categories.forEach(cat => {
                         if (grouped[cat] && grouped[cat].length > 0) {
                             hasItem = true;
-                            // [중요] 중분류 헤더 (체크박스 포함)
+                            // [중요] 중분류 헤더 (체크박스 포함) - toggleSubCategory 연결
                             groupHtml += `
-                                        <div class="sub-cat-header" onclick="toggleSubCategory(this, event)">
-                                            <input type="checkbox" class="parent-check" data-cat="${cat}">
-                                            <span>${CAT_NAMES[cat] || cat}</span>
-                                        </div>
-                                    `;
+                                    <div class="sub-cat-header" onclick="toggleSubCategory(this)">
+                                        <input type="checkbox" class="parent-check" data-cat="${cat}">
+                                        <span>${CAT_NAMES[cat] || cat}</span>
+                                    </div>
+                                `;
                             // [중요] 하위 아이템 그리드 (기본 비활성)
                             groupHtml += `<div id="grid-${cat}" class="proposal-check-grid">`;
                             grouped[cat].forEach(item => {
                                 const safeTitle = escapeHtml(item.title);
                                 const val = `[${CAT_NAMES[cat]}] ${safeTitle}`;
                                 groupHtml += `
-                                            <label class="proposal-item">
-                                                <input type="checkbox" name="interest" value="${val}" disabled>
-                                                <span>${safeTitle}</span>
-                                            </label>`;
+                                        <label class="proposal-item">
+                                            <input type="checkbox" name="interest" value="${val}" disabled>
+                                            <span>${safeTitle}</span>
+                                        </label>`;
                             });
                             groupHtml += `</div>`;
                         }
@@ -178,13 +178,10 @@
         };
 
         // [기능 2] 중분류 체크 시 -> 하위 항목 활성화/비활성화
-        window.toggleSubCategory = function (headerDiv, e) {
-            // 이벤트 버블링 방지 (체크박스 직접 클릭 시)
-            // e가 전달되지 않았을 경우(window.event 사용)를 대비
-            const target = e ? e.target : (window.event ? window.event.target : null);
-
-            if (target && target.tagName === 'INPUT') {
-                handleSubCategoryCheck(target);
+        window.toggleSubCategory = function (headerDiv) {
+            // 이벤트 버블링 방지 (체크박스 직접 클릭 시 중복 실행 방지)
+            if (event.target.tagName === 'INPUT') {
+                handleSubCategoryCheck(event.target);
                 return;
             }
 
@@ -201,17 +198,17 @@
             const childInputs = grid.querySelectorAll('input[type="checkbox"]');
 
             if (checkbox.checked) {
-                // 활성화
+                // 활성화: 그리드 투명도 복구, 내부 인풋 disabled 해제
                 grid.classList.add('active');
                 header.classList.add('active');
                 childInputs.forEach(input => input.disabled = false);
             } else {
-                // 비활성화
+                // 비활성화: 그리드 흐리게, 내부 인풋 disabled 설정 및 체크 해제
                 grid.classList.remove('active');
                 header.classList.remove('active');
                 childInputs.forEach(input => {
                     input.disabled = true;
-                    input.checked = false;
+                    input.checked = false; // 닫을 때 체크도 해제
                 });
             }
         }
@@ -235,6 +232,7 @@
             document.querySelectorAll('.parent-check:checked').forEach(parent => {
                 const catCode = parent.getAttribute('data-cat');
                 const catName = CAT_NAMES[catCode];
+                // 해당 카테고리의 하위 항목이 하나도 안 뽑혔으면 카테고리 이름이라도 추가
                 const hasChildChecked = interests.some(val => val.includes(`[${catName}]`));
                 if (!hasChildChecked) {
                     interests.push(`[관심분야] ${catName} (세부항목 미선택)`);

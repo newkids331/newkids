@@ -3,134 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>상세 보기 - 뉴키즈</title>
+    <title>상세 정보</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header></header>
-
-    <section style="background-color: #f8f9fa; padding-top: 120px; min-height: 80vh;">
-        <div class="container">
-            <div class="view-box">
-                <div id="loading-msg" style="text-align:center; padding:50px; color:#666;">
-                    데이터를 불러오는 중입니다...
-                </div>
-
-                <div id="view-content" style="display:none;">
-                    <div class="view-header">
-                        <span id="v-category" class="category-badge" style="background:#666; margin-bottom:10px; display:inline-block;">카테고리</span>
-                        <h1 id="v-title" class="view-title">제목</h1>
-                        <p id="v-date" style="color:#888; font-size:0.9rem; margin-top:5px;">-</p>
-                    </div>
-
-                    <div class="view-body" style="margin-top:30px;">
-                        <div id="v-video-area" class="view-media" style="display:none; margin-bottom:30px;">
-                            <iframe id="v-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-                        </div>
-
-                        <div id="v-img-area" style="text-align:center; margin-bottom:30px; display:none;">
-                            <img id="v-img" src="" alt="첨부 이미지" style="max-width:100%; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
-                        </div>
-
-                        <div id="v-desc" style="white-space: pre-wrap; font-size:1.05rem; line-height:1.7; color:#333; min-height:100px;"></div>
-                    </div>
-
-                    <a href="javascript:history.back()" class="btn-list">목록으로 돌아가기</a>
-                </div>
+    <div class="container">
+        <div id="loading" style="text-align:center; padding:100px;">로딩 중...</div>
+        <div id="view-area" class="view-box" style="display:none;">
+            <div class="view-header">
+                <span id="v-category" class="view-category"></span>
+                <h1 id="v-title" class="view-title"></h1>
+                <div id="v-date" class="view-date"></div>
             </div>
+            <div id="v-media-wrap" class="view-media"></div>
+            <div id="v-content" class="view-content"></div>
+            <a href="javascript:history.back()" class="btn-list">목록으로</a>
         </div>
-    </section>
-
+    </div>
     <footer></footer>
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
-    <script src="manager.js?v=3"></script>
-
+    <script src="manager.js"></script>
     <script>
+        const params = new URLSearchParams(window.location.search);
+        const POST_ID = params.get('id');
+
         document.addEventListener("DOMContentLoaded", function () {
-            const params = new URLSearchParams(window.location.search);
-            const id = params.get('id');
-
-            if (!id) {
-                alert("잘못된 접근입니다.");
-                location.href = "index.html";
-                return;
-            }
-
-            // [핵심] 리소스 로드 대기 로직 (Supabase 연결 확인)
-            let attempts = 0;
-            const checkResources = setInterval(() => {
-                attempts++;
-
-                // window.sb(서버연결)와 유틸리티 함수가 모두 준비되었는지 확인
-                if (window.sb && typeof window.formatDate === 'function' && typeof window.getYoutubeId === 'function') {
-                    clearInterval(checkResources);
-                    loadDetail(id);
-                }
-                else if (attempts > 50) {
-                    // 5초(50회) 이상 로드 안되면 에러 처리
-                    clearInterval(checkResources);
-
-                    if (!window.sb) {
-                        document.getElementById('loading-msg').innerText = "서버 연결에 실패했습니다. 페이지를 새로고침 해주세요.";
-                        console.error("Supabase 연결 실패");
-                    } else {
-                        // sb는 있는데 함수만 없는 경우 (비상 실행)
-                        if (!window.formatDate) window.formatDate = (d) => d?.split('T')[0] || '';
-                        if (!window.getYoutubeId) window.getYoutubeId = () => null;
-                        loadDetail(id);
-                    }
-                }
-            }, 100);
+            const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadDetail(window.sb); } }, 100);
         });
 
-        async function loadDetail(id) {
-            try {
-                if (!window.sb) throw new Error("Supabase 클라이언트 없음");
+        async function loadDetail(sb) {
+            if (!POST_ID) return alert("잘못된 접근입니다.");
+            const { data, error } = await sb.from('total_posts').select('*').eq('id', POST_ID).single();
+            if (error || !data) return alert("글을 찾을 수 없습니다.");
 
-                const { data, error } = await window.sb
-                    .from('total_posts')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
+            const catNames = {
+                'season': '시즌행사', 'culture': '원어민행사', 'performance': '부모참여',
+                'korean': '한글 & 독서', 'art': '미술 & 자연 환경', 'science': '과학',
+                'coding': '코딩 & 직업교육', 'english': '영어 & 지도', 'integrated': '통합보육 & 누리과정'
+            };
+            document.getElementById('v-category').innerText = catNames[data.category] || data.category;
+            document.getElementById('v-title').innerText = data.title;
+            document.getElementById('v-date').innerText = window.formatDate(data.created_at);
+            document.getElementById('v-content').innerText = data.content;
 
-                if (error || !data) {
-                    console.error("데이터 조회 오류:", error);
-                    document.getElementById('loading-msg').innerText = "게시글을 찾을 수 없습니다.";
-                    return;
-                }
+            const mediaWrap = document.getElementById('v-media-wrap');
+            let imgList = [];
+            try { const parsed = JSON.parse(data.image_url); if (Array.isArray(parsed)) imgList = parsed; else imgList = [data.image_url]; } catch (e) { imgList = [data.image_url]; }
 
-                // UI 업데이트
-                document.getElementById('loading-msg').style.display = 'none';
-                document.getElementById('view-content').style.display = 'block';
-
-                document.getElementById('v-category').innerText = data.category || '일반';
-                document.getElementById('v-title').innerText = data.title || '제목 없음';
-                document.getElementById('v-date').innerText = window.formatDate(data.created_at);
-                document.getElementById('v-desc').innerText = data.description || '';
-
-                // 유튜브 영상 처리
-                let hasVideo = false;
-                if (data.youtube_url) {
-                    const videoId = window.getYoutubeId(data.youtube_url);
-                    if (videoId) {
-                        hasVideo = true;
-                        document.getElementById('v-video-area').style.display = 'block';
-                        document.getElementById('v-iframe').src = `https://www.youtube.com/embed/${videoId}`;
-                    }
-                }
-
-                // 이미지 처리 (영상이 없으면 이미지를 보여줌)
-                if (data.image_url && !hasVideo) {
-                    document.getElementById('v-img-area').style.display = 'block';
-                    document.getElementById('v-img').src = data.image_url;
-                }
-
-            } catch (err) {
-                console.error("상세 페이지 로드 중 오류:", err);
-                document.getElementById('loading-msg').innerText = "오류가 발생했습니다.";
-            }
+            let mediaHtml = "";
+            imgList.forEach(url => {
+                if (!url) return;
+                const yId = window.getYoutubeId(url);
+                if (yId) mediaHtml += `<iframe src="https://www.youtube.com/embed/${yId}" frameborder="0" allowfullscreen></iframe>`;
+                else mediaHtml += `<img src="${url}" alt="이미지">`;
+            });
+            mediaWrap.innerHTML = mediaHtml;
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('view-area').style.display = 'block';
         }
     </script>
 </body>
