@@ -45,7 +45,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
-    <script src="manager.js?v=2"></script>
+    <script src="manager.js?v=3"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
@@ -58,27 +58,37 @@
                 return;
             }
 
-            // [핵심] manager.js의 함수들이 로드될 때까지 대기
+            // [핵심] 리소스 로드 대기 로직 (Supabase 연결 확인)
             let attempts = 0;
             const checkResources = setInterval(() => {
                 attempts++;
-                // formatDate와 getYoutubeId 함수가 모두 준비되었는지 확인
+
+                // window.sb(서버연결)와 유틸리티 함수가 모두 준비되었는지 확인
                 if (window.sb && typeof window.formatDate === 'function' && typeof window.getYoutubeId === 'function') {
                     clearInterval(checkResources);
                     loadDetail(id);
-                } else if (attempts > 50) { // 5초 이상 로드 안되면 강제 실행 (비상용)
+                }
+                else if (attempts > 50) {
+                    // 5초(50회) 이상 로드 안되면 에러 처리
                     clearInterval(checkResources);
-                    console.warn("manager.js 로드 지연. 강제 실행합니다.");
-                    // 비상용 폴백 함수 정의
-                    if (!window.formatDate) window.formatDate = (d) => d?.split('T')[0] || '';
-                    if (!window.getYoutubeId) window.getYoutubeId = () => null;
-                    loadDetail(id);
+
+                    if (!window.sb) {
+                        document.getElementById('loading-msg').innerText = "서버 연결에 실패했습니다. 페이지를 새로고침 해주세요.";
+                        console.error("Supabase 연결 실패");
+                    } else {
+                        // sb는 있는데 함수만 없는 경우 (비상 실행)
+                        if (!window.formatDate) window.formatDate = (d) => d?.split('T')[0] || '';
+                        if (!window.getYoutubeId) window.getYoutubeId = () => null;
+                        loadDetail(id);
+                    }
                 }
             }, 100);
         });
 
         async function loadDetail(id) {
             try {
+                if (!window.sb) throw new Error("Supabase 클라이언트 없음");
+
                 const { data, error } = await window.sb
                     .from('total_posts')
                     .select('*')
@@ -86,6 +96,7 @@
                     .single();
 
                 if (error || !data) {
+                    console.error("데이터 조회 오류:", error);
                     document.getElementById('loading-msg').innerText = "게시글을 찾을 수 없습니다.";
                     return;
                 }
@@ -96,34 +107,29 @@
 
                 document.getElementById('v-category').innerText = data.category || '일반';
                 document.getElementById('v-title').innerText = data.title || '제목 없음';
-
-                // 날짜 변환 (이제 안전함)
                 document.getElementById('v-date').innerText = window.formatDate(data.created_at);
                 document.getElementById('v-desc').innerText = data.description || '';
 
                 // 유튜브 영상 처리
+                let hasVideo = false;
                 if (data.youtube_url) {
                     const videoId = window.getYoutubeId(data.youtube_url);
                     if (videoId) {
+                        hasVideo = true;
                         document.getElementById('v-video-area').style.display = 'block';
                         document.getElementById('v-iframe').src = `https://www.youtube.com/embed/${videoId}`;
-                    } else {
-                        console.log("유효하지 않은 유튜브 URL:", data.youtube_url);
                     }
                 }
 
-                // 이미지 처리 (유튜브 없을 때 혹은 같이 표시)
-                if (data.image_url) {
-                    // 영상이 있으면 이미지는 숨기거나, 필요시 주석 해제하여 둘 다 표시 가능
-                    if (!data.youtube_url) {
-                        document.getElementById('v-img-area').style.display = 'block';
-                        document.getElementById('v-img').src = data.image_url;
-                    }
+                // 이미지 처리 (영상이 없으면 이미지를 보여줌)
+                if (data.image_url && !hasVideo) {
+                    document.getElementById('v-img-area').style.display = 'block';
+                    document.getElementById('v-img').src = data.image_url;
                 }
 
             } catch (err) {
                 console.error("상세 페이지 로드 중 오류:", err);
-                document.getElementById('loading-msg').innerText = "오류가 발생했습니다. 관리자에게 문의하세요.";
+                document.getElementById('loading-msg').innerText = "오류가 발생했습니다.";
             }
         }
     </script>

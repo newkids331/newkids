@@ -1,7 +1,8 @@
 ﻿// manager.js - 공통 기능 관리 (헤더/푸터/유틸리티)
 
-(function initSystem() {
-    // 1. 뷰포트 메타태그 자동 설정 (모바일 반응형 필수)
+// [1] 시스템 초기화 (Supabase 및 뷰포트 설정)
+function initSystem() {
+    // 1. 뷰포트 메타태그 자동 설정
     if (!document.querySelector('meta[name="viewport"]')) {
         const meta = document.createElement('meta');
         meta.name = 'viewport';
@@ -9,13 +10,22 @@
         document.head.prepend(meta);
     }
 
-    // 2. Supabase 클라이언트 초기화 (config.js 로드 확인)
+    // 2. Supabase 클라이언트 초기화 (안전 장치 추가)
+    if (window.sb) return; // 이미 초기화되었다면 중단
+
     if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
         window.sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        console.log("Supabase 연결 성공");
     } else {
-        console.warn("Supabase 라이브러리 또는 CONFIG가 로드되지 않았습니다.");
+        // 라이브러리 로드 속도 차이로 아직 준비 안 됐다면 0.1초 뒤 재시도
+        console.warn("Supabase 라이브러리 로드 대기 중...");
+        setTimeout(initSystem, 100);
     }
-})();
+}
+
+// 스크립트 로드 시 실행
+initSystem();
+document.addEventListener("DOMContentLoaded", initSystem);
 
 // [헤더 로드 함수]
 function loadHeader() {
@@ -92,7 +102,6 @@ window.toggleSubMenu = function (el) {
 };
 
 // [중요] 날짜 포맷 변환 함수 (YYYY.MM.DD)
-// 이 함수가 없으면 view.html에서 에러가 발생합니다.
 window.formatDate = function (dateString) {
     if (!dateString) return "";
     try {
@@ -107,10 +116,8 @@ window.formatDate = function (dateString) {
 };
 
 // [중요] 유튜브 URL에서 ID 추출 함수
-// 이 함수가 없으면 상세페이지 영상이 재생되지 않습니다.
 window.getYoutubeId = function (url) {
     if (!url) return null;
-    // 다양한 유튜브 URL 패턴 지원 (youtu.be, watch?v=, embed 등)
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return (match && match[2].length === 11) ? match[2] : null;
@@ -120,6 +127,7 @@ window.getYoutubeId = function (url) {
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();
+    initSystem(); // 혹시라도 실행 안 됐을 경우를 대비해 호출
 
     // 모바일 메뉴 외부 클릭 시 닫기
     document.addEventListener('click', function (e) {
