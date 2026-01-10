@@ -1,4 +1,4 @@
-﻿// manager.js - 공통 스크립트 (헤더, 푸터, 유틸리티 기능)
+﻿// manager.js - 공통 기능 관리 (헤더/푸터/유틸리티)
 
 (function initSystem() {
     // 1. 뷰포트 메타태그 자동 설정 (모바일 반응형 필수)
@@ -17,7 +17,7 @@
     }
 })();
 
-// 헤더(네비게이션) 로드 함수
+// [헤더 로드 함수]
 function loadHeader() {
     const headerEl = document.querySelector('header');
     if (headerEl) {
@@ -58,7 +58,7 @@ function loadHeader() {
     }
 }
 
-// 푸터 로드 함수
+// [푸터 로드 함수]
 function loadFooter() {
     const footerEl = document.querySelector('footer');
     if (footerEl) {
@@ -69,7 +69,7 @@ function loadFooter() {
                 <p>문의: <span>${CONFIG.COMPANY.PHONE}</span></p>
                 <br>
                 <p>
-                    <a href="admin.html" style="color:inherit; text-decoration:none; cursor:pointer;" title="관리자 로그인">
+                    <a href="admin.html" style="color:inherit; text-decoration:none;" title="관리자 로그인">
                         &copy; 2026 New Kids. All rights reserved.
                     </a>
                 </p>
@@ -78,36 +78,42 @@ function loadFooter() {
     }
 }
 
-// [기능] 모바일 메뉴 열기/닫기
+// [기능] 모바일 메뉴 토글
 window.toggleMenu = function () {
     const menu = document.getElementById('navMenu');
     if (menu) menu.classList.toggle('active');
 };
 
-// [기능] 모바일 서브메뉴(드롭다운) 열기/닫기
+// [기능] 모바일 서브메뉴(드롭다운) 토글
 window.toggleSubMenu = function (el) {
-    // 모바일 화면(폭 768px 이하)에서만 동작
     if (window.innerWidth <= 768) {
         el.parentElement.classList.toggle('sub-open');
     }
 };
 
-// [유틸리티] 날짜 포맷 변환 (YYYY.MM.DD) - 상세페이지 에러 해결용
+// [중요] 날짜 포맷 변환 함수 (YYYY.MM.DD)
+// 이 함수가 없으면 view.html에서 에러가 발생합니다.
 window.formatDate = function (dateString) {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}.${month}.${day}`;
+    try {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}.${month}.${day}`;
+    } catch (e) {
+        return dateString;
+    }
 };
 
-// [유틸리티] 유튜브 URL에서 ID 추출
+// [중요] 유튜브 URL에서 ID 추출 함수
+// 이 함수가 없으면 상세페이지 영상이 재생되지 않습니다.
 window.getYoutubeId = function (url) {
     if (!url) return null;
-    // 다양한 유튜브 URL 형식 대응 정규식
-    const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
-    return (match && match[7].length === 11) ? match[7] : null;
+    // 다양한 유튜브 URL 패턴 지원 (youtu.be, watch?v=, embed 등)
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
 };
 
 // 페이지 로드 완료 시 실행
@@ -115,12 +121,10 @@ document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();
 
-    // 모바일 메뉴 외부 클릭 시 닫기 기능
+    // 모바일 메뉴 외부 클릭 시 닫기
     document.addEventListener('click', function (e) {
         const menu = document.getElementById('navMenu');
         const btn = document.querySelector('.mobile-btn');
-
-        // 메뉴가 열려있고, 클릭한 곳이 메뉴나 버튼 내부가 아니라면 닫음
         if (menu && menu.classList.contains('active')) {
             if (!menu.contains(e.target) && !btn.contains(e.target)) {
                 menu.classList.remove('active');

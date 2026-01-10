@@ -13,26 +13,26 @@
         <div class="container">
             <div class="view-box">
                 <div id="loading-msg" style="text-align:center; padding:50px; color:#666;">
-                    내용을 불러오는 중입니다...
+                    데이터를 불러오는 중입니다...
                 </div>
 
                 <div id="view-content" style="display:none;">
                     <div class="view-header">
-                        <div id="v-category" class="category-badge" style="background:#666; margin-bottom:10px;">카테고리</div>
+                        <span id="v-category" class="category-badge" style="background:#666; margin-bottom:10px; display:inline-block;">카테고리</span>
                         <h1 id="v-title" class="view-title">제목</h1>
-                        <p id="v-date" style="color:#888; font-size:0.9rem; margin-top:5px;">2024.01.01</p>
+                        <p id="v-date" style="color:#888; font-size:0.9rem; margin-top:5px;">-</p>
                     </div>
 
                     <div class="view-body" style="margin-top:30px;">
                         <div id="v-video-area" class="view-media" style="display:none; margin-bottom:30px;">
-                            <iframe id="v-iframe" src="" frameborder="0" allowfullscreen></iframe>
+                            <iframe id="v-iframe" src="" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                         </div>
 
                         <div id="v-img-area" style="text-align:center; margin-bottom:30px; display:none;">
-                            <img id="v-img" src="" alt="상세 이미지" style="max-width:100%; border-radius:10px;">
+                            <img id="v-img" src="" alt="첨부 이미지" style="max-width:100%; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
                         </div>
 
-                        <div id="v-desc" style="white-space: pre-wrap; font-size:1.05rem; line-height:1.7; color:#333;"></div>
+                        <div id="v-desc" style="white-space: pre-wrap; font-size:1.05rem; line-height:1.7; color:#333; min-height:100px;"></div>
                     </div>
 
                     <a href="javascript:history.back()" class="btn-list">목록으로 돌아가기</a>
@@ -45,11 +45,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
-    <script src="manager.js"></script>
+    <script src="manager.js?v=2"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // URL에서 ID 파라미터 추출
             const params = new URLSearchParams(window.location.search);
             const id = params.get('id');
 
@@ -59,10 +58,20 @@
                 return;
             }
 
-            // Supabase 연결 확인 및 데이터 로드
-            const checkSb = setInterval(() => {
-                if (window.sb && window.formatDate) { // formatDate 함수까지 확인
-                    clearInterval(checkSb);
+            // [핵심] manager.js의 함수들이 로드될 때까지 대기
+            let attempts = 0;
+            const checkResources = setInterval(() => {
+                attempts++;
+                // formatDate와 getYoutubeId 함수가 모두 준비되었는지 확인
+                if (window.sb && typeof window.formatDate === 'function' && typeof window.getYoutubeId === 'function') {
+                    clearInterval(checkResources);
+                    loadDetail(id);
+                } else if (attempts > 50) { // 5초 이상 로드 안되면 강제 실행 (비상용)
+                    clearInterval(checkResources);
+                    console.warn("manager.js 로드 지연. 강제 실행합니다.");
+                    // 비상용 폴백 함수 정의
+                    if (!window.formatDate) window.formatDate = (d) => d?.split('T')[0] || '';
+                    if (!window.getYoutubeId) window.getYoutubeId = () => null;
                     loadDetail(id);
                 }
             }, 100);
@@ -70,7 +79,6 @@
 
         async function loadDetail(id) {
             try {
-                // 데이터 조회
                 const { data, error } = await window.sb
                     .from('total_posts')
                     .select('*')
@@ -78,39 +86,44 @@
                     .single();
 
                 if (error || !data) {
-                    document.getElementById('loading-msg').innerText = "삭제되었거나 존재하지 않는 게시글입니다.";
+                    document.getElementById('loading-msg').innerText = "게시글을 찾을 수 없습니다.";
                     return;
                 }
 
-                // 화면에 데이터 매핑
+                // UI 업데이트
                 document.getElementById('loading-msg').style.display = 'none';
                 document.getElementById('view-content').style.display = 'block';
 
                 document.getElementById('v-category').innerText = data.category || '일반';
                 document.getElementById('v-title').innerText = data.title || '제목 없음';
 
-                // [오류 해결] window.formatDate 사용
+                // 날짜 변환 (이제 안전함)
                 document.getElementById('v-date').innerText = window.formatDate(data.created_at);
                 document.getElementById('v-desc').innerText = data.description || '';
 
-                // 유튜브 처리
+                // 유튜브 영상 처리
                 if (data.youtube_url) {
                     const videoId = window.getYoutubeId(data.youtube_url);
                     if (videoId) {
                         document.getElementById('v-video-area').style.display = 'block';
                         document.getElementById('v-iframe').src = `https://www.youtube.com/embed/${videoId}`;
+                    } else {
+                        console.log("유효하지 않은 유튜브 URL:", data.youtube_url);
                     }
                 }
 
-                // 이미지 처리 (유튜브가 없을 때만 표시하거나, 둘 다 표시 가능)
-                if (data.image_url && !data.youtube_url) {
-                    document.getElementById('v-img-area').style.display = 'block';
-                    document.getElementById('v-img').src = data.image_url;
+                // 이미지 처리 (유튜브 없을 때 혹은 같이 표시)
+                if (data.image_url) {
+                    // 영상이 있으면 이미지는 숨기거나, 필요시 주석 해제하여 둘 다 표시 가능
+                    if (!data.youtube_url) {
+                        document.getElementById('v-img-area').style.display = 'block';
+                        document.getElementById('v-img').src = data.image_url;
+                    }
                 }
 
             } catch (err) {
-                console.error(err);
-                document.getElementById('loading-msg').innerText = "오류가 발생했습니다.";
+                console.error("상세 페이지 로드 중 오류:", err);
+                document.getElementById('loading-msg').innerText = "오류가 발생했습니다. 관리자에게 문의하세요.";
             }
         }
     </script>
