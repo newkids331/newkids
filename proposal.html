@@ -12,7 +12,7 @@
     <section class="sub-hero bg-proposal">
         <div class="container">
             <h1>제안서 및 견적 요청</h1>
-            <p>원하시는 프로그램을 선택해주시면 맞춤형 제안서를 보내드립니다.</p>
+            <p>관심 있는 카테고리를 체크하고 세부 프로그램을 선택해 주세요.</p>
         </div>
     </section>
 
@@ -40,59 +40,14 @@
                     </div>
                 </div>
 
-                <h3 class="form-section-title" style="margin-top: 30px;">📚 관심 프로그램 (중복 선택 가능)</h3>
-                <p style="font-size:0.9rem; color:#666; margin-bottom:15px;">아래 카테고리를 클릭하여 세부 프로그램을 선택해 주세요.</p>
+                <h3 class="form-section-title" style="margin-top: 30px;">📚 관심 프로그램 선택</h3>
+                <p style="font-size:0.9rem; color:#666; margin-bottom:15px;">
+                    <strong>[사용법]</strong> 원하시는 <u>카테고리(중분류)를 먼저 체크</u>하시면 상세 프로그램을 선택할 수 있습니다.
+                </p>
 
-                <div class="proposal-list-box">
+                <div id="loading-msg" style="text-align:center; padding:20px; color:#666;">목록을 불러오는 중입니다...</div>
 
-                    <div class="category-wrapper">
-                        <div class="proposal-category-header" onclick="toggleProposalCategory(this)">
-                            <span>🎓 교육 프로그램</span> <span class="toggle-icon">▼</span>
-                        </div>
-                        <div class="proposal-category-content">
-                            <div class="proposal-check-grid">
-                                <label class="proposal-item">
-                                    <input type="checkbox" name="interest" value="한글/독서"> 📚 한글 & 독서
-                                </label>
-                                <label class="proposal-item">
-                                    <input type="checkbox" name="interest" value="미술/자연"> 🎨 미술 & 자연 환경
-                                </label>
-                                <label class="proposal-item">
-                                    <input type="checkbox" name="interest" value="수학/과학"> 🔬 수학 & 과학
-                                </label>
-                                <label class="proposal-item">
-                                    <input type="checkbox" name="interest" value="코딩/직업"> 💻 코딩 & 직업교육
-                                </label>
-                                <label class="proposal-item">
-                                    <input type="checkbox" name="interest" value="영어/지도"> 🔤 영어 & 지도
-                                </label>
-                                <label class="proposal-item">
-                                    <input type="checkbox" name="interest" value="통합/누리"> 👶 통합보육 & 누리과정
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="category-wrapper">
-                        <div class="proposal-category-header" onclick="toggleProposalCategory(this)">
-                            <span>🎉 행사 프로그램</span> <span class="toggle-icon">▼</span>
-                        </div>
-                        <div class="proposal-category-content">
-                            <div class="proposal-check-grid">
-                                <label class="proposal-item">
-                                    <input type="checkbox" name="interest" value="시즌행사"> 🎅 시즌 테마 행사 
-                                </label>
-                                <label class="proposal-item">
-                                    <input type="checkbox" name="interest" value="원어민행사"> 🌍 원어민 행사 
-                                </label>
-                                <label class="proposal-item">
-                                    <input type="checkbox" name="interest" value="부모참여"> 👨‍👩‍👧‍👦 부모 참여 행사
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
+                <div id="proposal-list-area" class="proposal-list-box"></div>
 
                 <div class="form-group full-width" style="margin-top: 30px;">
                     <label class="form-label">문의사항 및 요청 내용</label>
@@ -106,27 +61,187 @@
     </section>
 
     <footer></footer>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="manager.js"></script>
 
     <script>
-        // [신규] 제안서 카테고리 토글 함수
-        function toggleProposalCategory(header) {
-            header.classList.toggle('active');
-            header.nextElementSibling.classList.toggle('show');
+        const EDU_CATS = ['korean', 'art', 'science', 'coding', 'english', 'integrated'];
+        const EVENT_CATS = ['season', 'culture', 'performance'];
+
+        const CAT_NAMES = {
+            'korean': '📚 한글 & 독서',
+            'art': '🎨 미술 & 자연',
+            'science': '🔬 수학 & 과학',
+            'coding': '💻 코딩 & 직업',
+            'english': '🔤 영어 & 지도',
+            'integrated': '👶 통합보육 & 누리',
+            'season': '🎉 시즌 테마 행사',
+            'culture': '🌍 원어민 행사',
+            'performance': '👨‍👩‍👧‍👦 부모 참여 행사'
+        };
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
+        document.addEventListener("DOMContentLoaded", function () {
+            let attempts = 0;
+            const checkSb = setInterval(() => {
+                attempts++;
+                if (window.sb) {
+                    clearInterval(checkSb);
+                    loadProposalItems(window.sb);
+                } else if (attempts > 50) {
+                    clearInterval(checkSb);
+                    document.getElementById('loading-msg').innerText = "데이터 로딩 실패";
+                }
+            }, 100);
+        });
+
+        async function loadProposalItems(sb) {
+            try {
+                const allCats = [...EDU_CATS, ...EVENT_CATS];
+                const { data, error } = await sb
+                    .from('total_posts')
+                    .select('id, title, category')
+                    .in('category', allCats)
+                    .order('category', { ascending: true })
+                    .order('created_at', { ascending: false });
+
+                const listArea = document.getElementById('proposal-list-area');
+                document.getElementById('loading-msg').style.display = 'none';
+
+                if (error) { console.error(error); return; }
+
+                const grouped = data.reduce((acc, item) => {
+                    const c = item.category;
+                    (acc[c] = acc[c] || []).push(item);
+                    return acc;
+                }, {});
+
+                let html = "";
+
+                // --- 그룹 생성 헬퍼 함수 ---
+                const createGroupHTML = (title, categories) => {
+                    let groupHtml = `<div class="category-wrapper">`;
+                    groupHtml += `   <div class="proposal-category-header" onclick="toggleProposalCategory(this)">
+                                            <span>${title}</span> <span class="toggle-icon">▼</span>
+                                        </div>`;
+                    groupHtml += `   <div class="proposal-category-content">`;
+
+                    let hasItem = false;
+                    categories.forEach(cat => {
+                        if (grouped[cat] && grouped[cat].length > 0) {
+                            hasItem = true;
+                            // [중요] 중분류 헤더 (체크박스 포함) - toggleSubCategory 연결
+                            groupHtml += `
+                                    <div class="sub-cat-header" onclick="toggleSubCategory(this)">
+                                        <input type="checkbox" class="parent-check" data-cat="${cat}">
+                                        <span>${CAT_NAMES[cat] || cat}</span>
+                                    </div>
+                                `;
+                            // [중요] 하위 아이템 그리드 (기본 비활성)
+                            groupHtml += `<div id="grid-${cat}" class="proposal-check-grid">`;
+                            grouped[cat].forEach(item => {
+                                const safeTitle = escapeHtml(item.title);
+                                const val = `[${CAT_NAMES[cat]}] ${safeTitle}`;
+                                groupHtml += `
+                                        <label class="proposal-item">
+                                            <input type="checkbox" name="interest" value="${val}" disabled>
+                                            <span>${safeTitle}</span>
+                                        </label>`;
+                            });
+                            groupHtml += `</div>`;
+                        }
+                    });
+                    if (!hasItem) groupHtml += `<p style="color:#999; padding:10px;">등록된 프로그램이 없습니다.</p>`;
+                    groupHtml += `   </div></div>`;
+                    return groupHtml;
+                };
+
+                // 1. 교육 프로그램
+                html += createGroupHTML("🎓 교육 프로그램", EDU_CATS);
+                // 2. 행사 프로그램
+                html += createGroupHTML("🎉 행사 프로그램", EVENT_CATS);
+
+                listArea.innerHTML = html;
+
+            } catch (e) { console.error(e); }
+        }
+
+        // [기능 1] 대분류(아코디언) 토글
+        window.toggleProposalCategory = function (header) {
+            header.classList.toggle('active');
+            header.nextElementSibling.classList.toggle('show');
+        };
+
+        // [기능 2] 중분류 체크 시 -> 하위 항목 활성화/비활성화
+        window.toggleSubCategory = function (headerDiv) {
+            // 이벤트 버블링 방지 (체크박스 직접 클릭 시 중복 실행 방지)
+            if (event.target.tagName === 'INPUT') {
+                handleSubCategoryCheck(event.target);
+                return;
+            }
+
+            // 헤더 영역(div) 클릭 시 내부 체크박스 상태 변경
+            const checkbox = headerDiv.querySelector('input[type="checkbox"]');
+            checkbox.checked = !checkbox.checked;
+            handleSubCategoryCheck(checkbox);
+        };
+
+        function handleSubCategoryCheck(checkbox) {
+            const cat = checkbox.getAttribute('data-cat');
+            const grid = document.getElementById(`grid-${cat}`);
+            const header = checkbox.closest('.sub-cat-header');
+            const childInputs = grid.querySelectorAll('input[type="checkbox"]');
+
+            if (checkbox.checked) {
+                // 활성화: 그리드 투명도 복구, 내부 인풋 disabled 해제
+                grid.classList.add('active');
+                header.classList.add('active');
+                childInputs.forEach(input => input.disabled = false);
+            } else {
+                // 비활성화: 그리드 흐리게, 내부 인풋 disabled 설정 및 체크 해제
+                grid.classList.remove('active');
+                header.classList.remove('active');
+                childInputs.forEach(input => {
+                    input.disabled = true;
+                    input.checked = false; // 닫을 때 체크도 해제
+                });
+            }
+        }
+
+        // 전송 로직
         const form = document.getElementById('proposalForm');
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             const btn = form.querySelector('.btn-submit');
             const originalText = btn.innerText;
 
-            // 관심 프로그램 수집 (숨겨져 있어도 체크된 값은 가져옴)
+            // 선택된 항목 + 카테고리 자체도 관심있으면 포함
             const interests = [];
+
+            // 1. 하위 항목 체크된 것 수집
             form.querySelectorAll('input[name="interest"]:checked').forEach(cb => {
                 interests.push(cb.value);
             });
+
+            // 2. 하위 항목은 없지만 카테고리(중분류)만 체크한 경우도 수집
+            document.querySelectorAll('.parent-check:checked').forEach(parent => {
+                const catCode = parent.getAttribute('data-cat');
+                const catName = CAT_NAMES[catCode];
+                // 해당 카테고리의 하위 항목이 하나도 안 뽑혔으면 카테고리 이름이라도 추가
+                const hasChildChecked = interests.some(val => val.includes(`[${catName}]`));
+                if (!hasChildChecked) {
+                    interests.push(`[관심분야] ${catName} (세부항목 미선택)`);
+                }
+            });
+
+            if (interests.length === 0) {
+                if (!confirm("선택하신 프로그램이 없습니다. 상담만 요청하시겠습니까?")) return;
+            }
 
             btn.disabled = true;
             btn.innerText = "전송 중...";
@@ -137,17 +252,15 @@
                 wonName: formData.get("wonName"),
                 manager: formData.get("manager"),
                 phone: formData.get("phone"),
-                // orderDetails 필드에 관심분야 저장 (DB 호환성)
-                orderDetails: "관심분야: " + (interests.join(", ") || "선택 없음"),
+                orderDetails: interests.length > 0 ? interests.join("\n") : "문의 사항 참조",
                 deliveryDate: formData.get("visitDate") || "미지정",
                 remarks: formData.get("inquiry"),
                 email: "",
                 timestamp: new Date().toLocaleString()
             };
 
-            // [중요] PROPOSAL_SHEET_URL 사용
             if (typeof CONFIG === 'undefined' || !CONFIG.PROPOSAL_SHEET_URL) {
-                alert("설정 오류: config.js에 PROPOSAL_SHEET_URL이 없습니다.");
+                alert("설정 오류: PROPOSAL_SHEET_URL 없음");
                 btn.disabled = false; btn.innerText = originalText;
                 return;
             }
@@ -159,15 +272,13 @@
                 .then(res => res.json())
                 .then(res => {
                     if (res.result === 'success') {
-                        alert("상담 요청이 성공적으로 접수되었습니다.\n담당자가 확인 후 연락드리겠습니다.");
+                        alert("성공적으로 접수되었습니다.");
                         window.location.reload();
-                    } else {
-                        throw new Error(res.error);
-                    }
+                    } else { throw new Error(res.error); }
                 })
                 .catch(err => {
                     console.error(err);
-                    alert("전송 중 오류가 발생했습니다.");
+                    alert("전송 오류 발생");
                     btn.disabled = false;
                     btn.innerText = originalText;
                 });

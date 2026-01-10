@@ -26,7 +26,7 @@ body {
     color: var(--text-color);
     line-height: 1.6;
     background-color: #fff;
-    padding-top: 70px; /* 헤더 높이만큼 상단 여백 */
+    padding-top: 70px;
 }
 
 a {
@@ -105,7 +105,6 @@ h2 {
     border: 1px solid #fff;
 }
 
-/* 버튼 그룹 */
 .btn-group {
     display: flex;
     gap: 15px;
@@ -180,7 +179,6 @@ ul.nav-menu {
     font-weight: 700 !important;
 }
 
-/* 드롭다운 메뉴 */
 .dropdown {
     display: none;
     position: absolute;
@@ -216,7 +214,6 @@ ul.nav-menu {
         font-weight: bold;
     }
 
-/* 모바일 메뉴 버튼 */
 .mobile-btn {
     display: none;
     font-size: 1.8rem;
@@ -279,7 +276,6 @@ ul.nav-menu {
 /* =========================================
    4. 배너 (Hero Section)
    ========================================= */
-/* 메인 페이지 배너 */
 .hero {
     height: 600px;
     background: linear-gradient(rgba(26, 60, 110, 0.4), rgba(26, 60, 110, 0.4)), url('https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat;
@@ -305,7 +301,6 @@ ul.nav-menu {
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
-/* 서브 페이지 공통 배너 */
 .sub-hero {
     height: 350px;
     background-size: cover;
@@ -330,7 +325,6 @@ ul.nav-menu {
         text-shadow: 0 2px 5px rgba(0,0,0,0.8);
     }
 
-/* 각 페이지별 배경 이미지 */
 .bg-season {
     background-image: linear-gradient(rgba(26,60,110,0.85), rgba(26,60,110,0.85)), url('https://images.unsplash.com/photo-1547638375-ebf04735d792?auto=format&fit=crop&w=1600&q=80');
 }
@@ -358,14 +352,12 @@ ul.nav-menu {
 /* =========================================
    5. 카드 시스템 & 폼
    ========================================= */
-/* 그리드 공통 */
 .main-grid, .gallery-grid, .product-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 30px;
 }
 
-/* 카드 스타일 */
 .card, .product-card, .post-card {
     background: white;
     border-radius: 15px;
@@ -384,7 +376,6 @@ ul.nav-menu {
         border-color: var(--accent-color);
     }
 
-/* 메인 카드 */
 .card {
     background: var(--bg-light);
     padding: 40px 30px;
@@ -417,7 +408,6 @@ ul.nav-menu {
     font-size: 0.9rem;
 }
 
-/* 이미지형 카드 (갤러리 등) */
 .card-img-wrap, .product-img-wrap, .post-thumb {
     position: relative;
     width: 100%;
@@ -461,7 +451,6 @@ ul.nav-menu {
     overflow: hidden;
 }
 
-/* 폼 컨테이너 */
 .proposal-box, .panel-box {
     max-width: 800px;
     margin: 0 auto;
@@ -496,7 +485,6 @@ ul.nav-menu {
     grid-column: 1 / -1;
 }
 
-/* 폼 요소 */
 .form-label, label {
     display: block;
     font-weight: 600;
@@ -560,7 +548,6 @@ textarea {
     }
 }
 
-/* 로그인 박스 */
 #login-section {
     max-width: 400px;
     margin: 80px auto;
@@ -575,7 +562,6 @@ textarea {
         margin-bottom: 15px;
     }
 
-/* 관리자 목록 */
 .form-row {
     display: flex;
     gap: 15px;
@@ -663,7 +649,6 @@ textarea {
     margin-bottom: 8px;
 }
 
-/* 필터 및 로딩 */
 .filter-area {
     display: flex;
     justify-content: space-between;
@@ -702,7 +687,6 @@ textarea {
     display: none;
 }
 
-/* 상세 페이지 */
 .view-box {
     background: #fff;
     padding: 40px;
@@ -745,7 +729,6 @@ textarea {
     font-weight: bold;
 }
 
-/* 소개 페이지 */
 .intro-summary {
     background-color: #fff;
     text-align: center;
@@ -769,7 +752,6 @@ textarea {
         margin-bottom: 20px;
     }
 
-/* 푸터 */
 footer {
     background: #222;
     color: #888;
@@ -782,7 +764,6 @@ footer {
    7. [발주(Order) 페이지 전용 스타일]
    ========================================= */
 
-/* 주문 영역 컨테이너 (2열 그리드) */
 .order-list-box {
     margin-top: 20px;
     display: grid;
@@ -797,13 +778,11 @@ footer {
     }
 }
 
-/* 카테고리 래퍼 */
 .category-wrapper {
     display: flex;
     flex-direction: column;
 }
 
-/* 카테고리 헤더 */
 .order-category-header {
     background: #fff;
     padding: 20px;
@@ -847,7 +826,6 @@ footer {
     color: #fff;
 }
 
-/* 카테고리 내용 */
 .order-category-content {
     display: none;
     background: #fff;
@@ -878,7 +856,6 @@ footer {
     }
 }
 
-/* 상품 행 */
 .order-item-row {
     padding: 15px 20px;
     border-bottom: 1px solid #f5f5f5;
@@ -898,7 +875,6 @@ footer {
         background-color: #f0f7ff;
     }
 
-/* 상품 정보 */
 .order-item-info {
     display: flex;
     justify-content: space-between;
@@ -927,7 +903,6 @@ footer {
     display: block;
 }
 
-/* 동적 수량 입력 컨테이너 */
 .dynamic-qty-container {
     display: none;
     background: #fff;
@@ -954,7 +929,6 @@ footer {
     }
 }
 
-/* 입력 행 */
 .qty-row {
     display: flex;
     gap: 8px;
@@ -987,7 +961,6 @@ footer {
         outline: none;
     }
 
-/* 추가/삭제 버튼 */
 .btn-remove-row {
     width: 32px;
     height: 38px;
@@ -1037,13 +1010,13 @@ footer {
     align-items: flex-start;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .proposal-list-box {
         grid-template-columns: 1fr;
     }
 }
 
-/* 제안서 카테고리 헤더 */
+/* 대분류 헤더 */
 .proposal-category-header {
     background: #fff;
     padding: 20px;
@@ -1080,7 +1053,7 @@ footer {
             color: #fff;
         }
 
-/* 제안서 카테고리 내용 */
+/* 대분류 내용 */
 .proposal-category-content {
     display: none;
     background: #fff;
@@ -1088,7 +1061,7 @@ footer {
     border-top: none;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
-    padding: 15px;
+    padding: 20px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.03);
     animation: slideDown 0.3s ease-out;
 }
@@ -1097,20 +1070,77 @@ footer {
         display: block;
     }
 
-/* 체크박스 아이템 */
-.proposal-check-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 10px;
-}
-
-.proposal-item {
-    background: #fdfdfd;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    padding: 12px 15px;
+/* 중분류 헤더 (체크박스) */
+.sub-cat-header {
     display: flex;
     align-items: center;
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    margin-bottom: 10px;
+    border-left: 4px solid #ccc; /* 비활성 */
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+    .sub-cat-header:first-child {
+        margin-top: 0;
+    }
+
+    .sub-cat-header input {
+        margin-right: 10px;
+        transform: scale(1.3);
+        accent-color: var(--accent-color);
+    }
+
+    .sub-cat-header span {
+        font-weight: 700;
+        color: #555;
+        font-size: 1rem;
+    }
+
+    /* 활성화 시 */
+    .sub-cat-header.active {
+        background: #fff8f0;
+        border-left-color: var(--accent-color);
+    }
+
+        .sub-cat-header.active span {
+            color: #333;
+        }
+
+/* [수정됨] 체크박스 그리드 (2열로 보기 쉽게) */
+.proposal-check-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding-left: 5px;
+    transition: 0.3s;
+    opacity: 0.5;
+    pointer-events: none; /* 기본 비활성 */
+}
+
+@media (max-width: 480px) {
+    .proposal-check-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.proposal-check-grid.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+/* 활성화 */
+
+/* [수정됨] 자동 줄바꿈 & 정렬 개선 */
+.proposal-item {
+    background: #fff;
+    border: 1px solid #eee;
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: flex;
+    align-items: flex-start; /* 텍스트 길어도 상단 정렬 */
     cursor: pointer;
     transition: 0.2s;
 }
@@ -1122,6 +1152,15 @@ footer {
 
     .proposal-item input {
         margin-right: 10px;
-        transform: scale(1.2);
+        margin-top: 4px; /* 텍스트 줄맞춤 */
+        transform: scale(1.15);
         accent-color: var(--primary-color);
+        flex-shrink: 0;
+    }
+
+    .proposal-item span {
+        font-size: 0.95rem;
+        color: #333;
+        word-break: keep-all; /* 단어 단위 줄바꿈 */
+        line-height: 1.4;
     }

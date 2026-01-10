@@ -1,6 +1,7 @@
-﻿// manager.js
+﻿// manager.js - 공통 스크립트 (헤더, 푸터, 유틸리티 기능)
 
 (function initSystem() {
+    // 1. 뷰포트 메타태그 자동 설정 (모바일 반응형 필수)
     if (!document.querySelector('meta[name="viewport"]')) {
         const meta = document.createElement('meta');
         meta.name = 'viewport';
@@ -8,19 +9,26 @@
         document.head.prepend(meta);
     }
 
+    // 2. Supabase 클라이언트 초기화 (config.js 로드 확인)
     if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
         window.sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+    } else {
+        console.warn("Supabase 라이브러리 또는 CONFIG가 로드되지 않았습니다.");
     }
 })();
 
-// 헤더 로드 (교재 발주 메뉴 추가됨)
+// 헤더(네비게이션) 로드 함수
 function loadHeader() {
     const headerEl = document.querySelector('header');
     if (headerEl) {
         headerEl.innerHTML = `
             <div class="header-inner">
-                <a href="index.html" class="logo-link"><img src="${CONFIG.LOGO_URL}" alt="NEW KIDS" class="logo-img"></a>
+                <a href="index.html" class="logo-link">
+                    <img src="${CONFIG.LOGO_URL}" alt="NEW KIDS" class="logo-img">
+                </a>
+                
                 <button class="mobile-btn" onclick="window.toggleMenu()">☰</button>
+                
                 <ul class="nav-menu" id="navMenu">
                     <li><a href="index.html">홈으로</a></li>
                     <li>
@@ -42,7 +50,7 @@ function loadHeader() {
                             <li><a href="performance.html">👨‍👩‍👧‍👦 부모 참여 행사</a></li>
                         </ul>
                     </li>
-                    <li><a href="order.html" style="font-weight:bold;">교재 발주</a></li>
+                    <li><a href="order.html" style="font-weight:bold; color:var(--primary-color);">교재 발주</a></li>
                     <li><a href="proposal.html" class="cta-menu">견적요청</a></li>
                 </ul>
             </div>
@@ -50,7 +58,7 @@ function loadHeader() {
     }
 }
 
-// 푸터 로드
+// 푸터 로드 함수
 function loadFooter() {
     const footerEl = document.querySelector('footer');
     if (footerEl) {
@@ -70,23 +78,53 @@ function loadFooter() {
     }
 }
 
-window.toggleMenu = function () { document.getElementById('navMenu').classList.toggle('active'); };
-window.toggleSubMenu = function (el) { if (window.innerWidth <= 768) el.parentElement.classList.toggle('sub-open'); };
+// [기능] 모바일 메뉴 열기/닫기
+window.toggleMenu = function () {
+    const menu = document.getElementById('navMenu');
+    if (menu) menu.classList.toggle('active');
+};
 
+// [기능] 모바일 서브메뉴(드롭다운) 열기/닫기
+window.toggleSubMenu = function (el) {
+    // 모바일 화면(폭 768px 이하)에서만 동작
+    if (window.innerWidth <= 768) {
+        el.parentElement.classList.toggle('sub-open');
+    }
+};
+
+// [유틸리티] 날짜 포맷 변환 (YYYY.MM.DD) - 상세페이지 에러 해결용
+window.formatDate = function (dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}.${month}.${day}`;
+};
+
+// [유틸리티] 유튜브 URL에서 ID 추출
 window.getYoutubeId = function (url) {
     if (!url) return null;
+    // 다양한 유튜브 URL 형식 대응 정규식
     const match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/);
     return (match && match[7].length === 11) ? match[7] : null;
 };
 
+// 페이지 로드 완료 시 실행
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();
+
+    // 모바일 메뉴 외부 클릭 시 닫기 기능
     document.addEventListener('click', function (e) {
         const menu = document.getElementById('navMenu');
         const btn = document.querySelector('.mobile-btn');
+
+        // 메뉴가 열려있고, 클릭한 곳이 메뉴나 버튼 내부가 아니라면 닫음
         if (menu && menu.classList.contains('active')) {
-            if (!menu.contains(e.target) && !btn.contains(e.target)) menu.classList.remove('active');
+            if (!menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.classList.remove('active');
+            }
         }
     });
 });

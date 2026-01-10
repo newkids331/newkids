@@ -3,65 +3,115 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>상세 정보</title>
+    <title>상세 보기 - 뉴키즈</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header></header>
-    <div class="container">
-        <div id="loading" style="text-align:center; padding:100px;">로딩 중...</div>
-        <div id="view-area" class="view-box" style="display:none;">
-            <div class="view-header">
-                <span id="v-category" class="view-category"></span>
-                <h1 id="v-title" class="view-title"></h1>
-                <div id="v-date" class="view-date"></div>
+
+    <section style="background-color: #f8f9fa; padding-top: 120px; min-height: 80vh;">
+        <div class="container">
+            <div class="view-box">
+                <div id="loading-msg" style="text-align:center; padding:50px; color:#666;">
+                    내용을 불러오는 중입니다...
+                </div>
+
+                <div id="view-content" style="display:none;">
+                    <div class="view-header">
+                        <div id="v-category" class="category-badge" style="background:#666; margin-bottom:10px;">카테고리</div>
+                        <h1 id="v-title" class="view-title">제목</h1>
+                        <p id="v-date" style="color:#888; font-size:0.9rem; margin-top:5px;">2024.01.01</p>
+                    </div>
+
+                    <div class="view-body" style="margin-top:30px;">
+                        <div id="v-video-area" class="view-media" style="display:none; margin-bottom:30px;">
+                            <iframe id="v-iframe" src="" frameborder="0" allowfullscreen></iframe>
+                        </div>
+
+                        <div id="v-img-area" style="text-align:center; margin-bottom:30px; display:none;">
+                            <img id="v-img" src="" alt="상세 이미지" style="max-width:100%; border-radius:10px;">
+                        </div>
+
+                        <div id="v-desc" style="white-space: pre-wrap; font-size:1.05rem; line-height:1.7; color:#333;"></div>
+                    </div>
+
+                    <a href="javascript:history.back()" class="btn-list">목록으로 돌아가기</a>
+                </div>
             </div>
-            <div id="v-media-wrap" class="view-media"></div>
-            <div id="v-content" class="view-content"></div>
-            <a href="javascript:history.back()" class="btn-list">목록으로</a>
         </div>
-    </div>
+    </section>
+
     <footer></footer>
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="config.js"></script>
     <script src="manager.js"></script>
-    <script>
-        const params = new URLSearchParams(window.location.search);
-        const POST_ID = params.get('id');
 
+    <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadDetail(window.sb); } }, 100);
+            // URL에서 ID 파라미터 추출
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+
+            if (!id) {
+                alert("잘못된 접근입니다.");
+                location.href = "index.html";
+                return;
+            }
+
+            // Supabase 연결 확인 및 데이터 로드
+            const checkSb = setInterval(() => {
+                if (window.sb && window.formatDate) { // formatDate 함수까지 확인
+                    clearInterval(checkSb);
+                    loadDetail(id);
+                }
+            }, 100);
         });
 
-        async function loadDetail(sb) {
-            if (!POST_ID) return alert("잘못된 접근입니다.");
-            const { data, error } = await sb.from('total_posts').select('*').eq('id', POST_ID).single();
-            if (error || !data) return alert("글을 찾을 수 없습니다.");
+        async function loadDetail(id) {
+            try {
+                // 데이터 조회
+                const { data, error } = await window.sb
+                    .from('total_posts')
+                    .select('*')
+                    .eq('id', id)
+                    .single();
 
-            const catNames = {
-                'season': '시즌행사', 'culture': '원어민행사', 'performance': '부모참여',
-                'korean': '한글 & 독서', 'art': '미술 & 자연 환경', 'science': '과학',
-                'coding': '코딩 & 직업교육', 'english': '영어 & 지도', 'integrated': '통합보육 & 누리과정'
-            };
-            document.getElementById('v-category').innerText = catNames[data.category] || data.category;
-            document.getElementById('v-title').innerText = data.title;
-            document.getElementById('v-date').innerText = window.formatDate(data.created_at);
-            document.getElementById('v-content').innerText = data.content;
+                if (error || !data) {
+                    document.getElementById('loading-msg').innerText = "삭제되었거나 존재하지 않는 게시글입니다.";
+                    return;
+                }
 
-            const mediaWrap = document.getElementById('v-media-wrap');
-            let imgList = [];
-            try { const parsed = JSON.parse(data.image_url); if (Array.isArray(parsed)) imgList = parsed; else imgList = [data.image_url]; } catch (e) { imgList = [data.image_url]; }
+                // 화면에 데이터 매핑
+                document.getElementById('loading-msg').style.display = 'none';
+                document.getElementById('view-content').style.display = 'block';
 
-            let mediaHtml = "";
-            imgList.forEach(url => {
-                if (!url) return;
-                const yId = window.getYoutubeId(url);
-                if (yId) mediaHtml += `<iframe src="https://www.youtube.com/embed/${yId}" frameborder="0" allowfullscreen></iframe>`;
-                else mediaHtml += `<img src="${url}" alt="이미지">`;
-            });
-            mediaWrap.innerHTML = mediaHtml;
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('view-area').style.display = 'block';
+                document.getElementById('v-category').innerText = data.category || '일반';
+                document.getElementById('v-title').innerText = data.title || '제목 없음';
+
+                // [오류 해결] window.formatDate 사용
+                document.getElementById('v-date').innerText = window.formatDate(data.created_at);
+                document.getElementById('v-desc').innerText = data.description || '';
+
+                // 유튜브 처리
+                if (data.youtube_url) {
+                    const videoId = window.getYoutubeId(data.youtube_url);
+                    if (videoId) {
+                        document.getElementById('v-video-area').style.display = 'block';
+                        document.getElementById('v-iframe').src = `https://www.youtube.com/embed/${videoId}`;
+                    }
+                }
+
+                // 이미지 처리 (유튜브가 없을 때만 표시하거나, 둘 다 표시 가능)
+                if (data.image_url && !data.youtube_url) {
+                    document.getElementById('v-img-area').style.display = 'block';
+                    document.getElementById('v-img').src = data.image_url;
+                }
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loading-msg').innerText = "오류가 발생했습니다.";
+            }
         }
     </script>
 </body>
