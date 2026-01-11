@@ -1,9 +1,14 @@
 ﻿// manager.js - 통합 로직 관리자
 
 (function initSystem() {
-    // 1. Supabase 초기화 (Config 사용)
+    // 1. Supabase 초기화 (보안 강화: 창 닫으면 자동 로그아웃)
     if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
-        window.sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        window.sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
+            auth: {
+                persistSession: true,       // 세션 유지 사용
+                storage: window.sessionStorage // ★ 로컬 스토리지 대신 세션 스토리지 사용 (핵심)
+            }
+        });
     }
 })();
 

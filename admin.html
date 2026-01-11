@@ -13,7 +13,6 @@
     <div id="loading" class="loading-overlay">처리 중입니다...</div>
 
     <div class="container">
-
         <div id="login-section">
             <h2 style="text-align:center; margin-bottom:30px;">🔒 관리자 로그인</h2>
             <div class="form-group">
@@ -24,17 +23,14 @@
                 <label>비밀번호</label>
                 <input type="password" id="admin-password" class="form-input" placeholder="비밀번호 입력">
             </div>
-
             <div class="btn-center-wrap">
                 <button onclick="adminLogin()" class="btn-action" style="width: 100%;">로그인</button>
             </div>
         </div>
 
         <div id="admin-section" style="display:none;">
-
             <div class="panel-box">
                 <h2 id="form-title" style="border-bottom:2px solid #1a3c6e; padding-bottom:15px; margin-bottom:20px;">📝 새 글 작성하기</h2>
-
                 <input type="file" id="hidden-image-input" accept="image/*" multiple style="display:none;">
 
                 <div class="form-grid">
@@ -46,7 +42,7 @@
                                 <option value="culture">🌍 원어민 행사</option>
                                 <option value="performance">👨‍👩‍👧‍👦 부모 참여 행사</option>
                             </optgroup>
-                            <optgroup label="교육 프로그램 (교재)">
+                            <optgroup label="교육 프로그램">
                                 <option value="korean">📚 한글 & 독서</option>
                                 <option value="art">🎨 미술 & 자연</option>
                                 <option value="science">🔬 수학 & 과학</option>
@@ -57,7 +53,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>순서 (숫자가 작을수록 먼저 보임)</label>
+                        <label>순서 (작은 숫자 우선)</label>
                         <input type="number" id="post-order" class="form-input" value="0">
                     </div>
                 </div>
@@ -67,31 +63,37 @@
                     <input type="text" id="post-title" class="form-input" placeholder="제목을 입력하세요">
                 </div>
 
-                <div class="form-group thumbnail-group">
-                    <label>📌 대표 이미지 (썸네일) - 목록에 보여질 사진</label>
+                <div class="form-group">
+                    <label>📌 대표 이미지 (썸네일)</label>
                     <input type="file" id="post-thumb-file" class="form-input" accept="image/*">
-                    <div id="current-thumb-msg" class="file-status"></div>
+                    <div id="thumb-manage-area" class="file-manage-area" style="display:none;">
+                        <span id="current-thumb-msg"></span>
+                        <label class="del-label"><input type="checkbox" id="delete-thumb-check"> 기존 사진 삭제</label>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>내용 (사진 클릭 후 크기 조절/정렬 가능)</label>
+                    <label>내용</label>
                     <div id="editor-container"></div>
                 </div>
 
                 <div class="form-group">
-                    <label>상세 이미지/동영상 (선택 - 통이미지나 영상 파일)</label>
+                    <label>상세 이미지/동영상 (선택)</label>
                     <input type="file" id="post-file" class="form-input" accept="image/*,video/*">
-                    <div id="current-file-msg" class="file-status"></div>
+                    <div id="file-manage-area" class="file-manage-area" style="display:none;">
+                        <span id="current-file-msg"></span>
+                        <label class="del-label"><input type="checkbox" id="delete-file-check"> 기존 파일 삭제</label>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>유튜브 링크 (선택)</label>
+                    <label>유튜브 링크</label>
                     <input type="text" id="youtube-url" class="form-input" placeholder="https://youtu.be/...">
                 </div>
 
                 <div class="form-group">
-                    <label>관련 링크 (선택)</label>
-                    <input type="text" id="post-link" class="form-input" placeholder="클릭 시 이동할 주소 (예: 블로그, 인스타)">
+                    <label>관련 링크</label>
+                    <input type="text" id="post-link" class="form-input" placeholder="클릭 시 이동할 주소">
                 </div>
 
                 <div class="btn-center-wrap">
@@ -106,28 +108,20 @@
                     <div class="filter-box">
                         <select id="filter-category" class="form-input" onchange="loadManageList()">
                             <option value="all">전체 보기</option>
-                            <optgroup label="행사 프로그램">
-                                <option value="season">🎉 시즌 테마 행사</option>
-                                <option value="culture">🌍 원어민 행사</option>
-                                <option value="performance">👨‍👩‍👧‍👦 부모 참여 행사</option>
-                            </optgroup>
-                            <optgroup label="교육 프로그램">
-                                <option value="korean">📚 한글/독서</option>
-                                <option value="art">🎨 미술/자연</option>
-                                <option value="science">🔬 수학/과학</option>
-                                <option value="coding">💻 코딩/직업</option>
-                                <option value="english">🔤 영어/지도</option>
-                                <option value="integrated">👶 통합/누리</option>
-                            </optgroup>
+                            <option value="season">🎉 시즌 테마 행사</option>
+                            <option value="culture">🌍 원어민 행사</option>
+                            <option value="performance">👨‍👩‍👧‍👦 부모 참여 행사</option>
+                            <option value="korean">📚 한글/독서</option>
+                            <option value="art">🎨 미술/자연</option>
+                            <option value="science">🔬 수학/과학</option>
+                            <option value="coding">💻 코딩/직업</option>
+                            <option value="english">🔤 영어/지도</option>
+                            <option value="integrated">👶 통합/누리</option>
                         </select>
-                        <button onclick="loadManageList()" class="btn-mini" style="background:var(--primary-color); color:#fff; border:none; padding:10px 20px;">조회</button>
                     </div>
                 </div>
-
-                <div id="manage-list">
-                </div>
+                <div id="manage-list"></div>
             </div>
-
         </div>
     </div>
 
@@ -144,61 +138,46 @@
         let originalDetailUrl = null;
         let originalThumbUrl = null;
         let quill;
-
         const NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image";
 
         document.addEventListener("DOMContentLoaded", async function () {
-
-            // [중요] 이미지 크기 조절 및 정렬 모듈 등록
             Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
-
             quill = new Quill('#editor-container', {
                 theme: 'snow',
-                placeholder: '여기에 내용을 작성하세요...',
                 modules: {
-                    blotFormatter: {}, // 이미지 수정 모듈 활성화
+                    blotFormatter: {},
                     toolbar: {
                         container: [
                             [{ 'header': [1, 2, 3, false] }],
-                            ['bold', 'italic', 'underline', 'strike'],
+                            ['bold', 'italic', 'underline'],
                             [{ 'color': [] }, { 'background': [] }],
-                            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
                             [{ 'align': [] }],
-                            ['link', 'image', 'video', 'clean']
+                            ['link', 'image', 'video']
                         ],
                         handlers: {
-                            'image': imageHandler
+                            image: function () { document.getElementById('hidden-image-input').click(); }
                         }
                     }
                 }
             });
 
+            // 드래그 앤 드롭 복구
             const editorRoot = quill.root;
             editorRoot.addEventListener('drop', handleDrop, false);
-            editorRoot.addEventListener('dragover', function (e) { e.preventDefault(); }, false);
+            editorRoot.addEventListener('dragover', (e) => e.preventDefault(), false);
 
             document.getElementById('hidden-image-input').addEventListener('change', function () {
-                if (this.files && this.files.length > 0) {
-                    uploadAndInsertImages(this.files);
-                    this.value = "";
-                }
+                if (this.files.length > 0) uploadAndInsertImages(this.files);
             });
 
             const { data: { session } } = await window.sb.auth.getSession();
-            if (session) {
-                showAdminMode();
-            } else {
-                document.getElementById('login-section').style.display = 'block';
-            }
+            if (session) showAdminMode();
+            else document.getElementById('login-section').style.display = 'block';
         });
-
-        function imageHandler() {
-            document.getElementById('hidden-image-input').click();
-        }
 
         function handleDrop(e) {
             e.preventDefault();
-            if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            if (e.dataTransfer && e.dataTransfer.files.length > 0) {
                 uploadAndInsertImages(e.dataTransfer.files);
             }
         }
@@ -208,40 +187,26 @@
             const range = quill.getSelection(true);
             let currentIndex = range ? range.index : quill.getLength();
 
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
+            for (const file of files) {
                 if (!file.type.startsWith('image/')) continue;
-
                 try {
-                    const fileName = `content_${Date.now()}_${Math.random().toString(36).substr(2, 9)}_${file.name}`;
+                    const fileName = `content_${Date.now()}_${file.name}`;
                     const { data, error } = await window.sb.storage.from('images').upload(fileName, file);
-
                     if (error) throw error;
-
                     const { data: publicData } = window.sb.storage.from('images').getPublicUrl(fileName);
-                    const publicUrl = publicData.publicUrl;
-
-                    quill.insertEmbed(currentIndex, 'image', publicUrl);
-                    currentIndex++;
-                    quill.setSelection(currentIndex);
-
-                } catch (err) {
-                    console.error('이미지 업로드 실패:', err);
-                    alert(`'${file.name}' 업로드 중 오류가 발생했습니다.`);
-                }
+                    quill.insertEmbed(currentIndex++, 'image', publicData.publicUrl);
+                } catch (err) { alert("업로드 실패: " + err.message); }
             }
             showLoading(false);
+            quill.setSelection(currentIndex);
         }
 
         async function adminLogin() {
             const email = document.getElementById('admin-email').value;
             const password = document.getElementById('admin-password').value;
-            if (!email || !password) return alert("이메일과 비밀번호를 입력해주세요.");
-
             showLoading(true);
-            const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
+            const { error } = await window.sb.auth.signInWithPassword({ email, password });
             showLoading(false);
-
             if (error) alert("로그인 실패: " + error.message);
             else showAdminMode();
         }
@@ -252,202 +217,110 @@
             loadManageList();
         }
 
-        function showLoading(show) {
-            document.getElementById('loading').style.display = show ? 'flex' : 'none';
-        }
+        function showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
 
         async function loadManageList() {
             const cat = document.getElementById('filter-category').value;
             let query = window.sb.from('total_posts').select('*');
-
             if (cat !== 'all') query = query.eq('category', cat);
+            const { data } = await query.order('order_num', { ascending: true }).order('created_at', { ascending: false });
 
-            query = query.order('category', { ascending: true })
-                .order('order_num', { ascending: true })
-                .order('created_at', { ascending: false });
-
-            const { data, error } = await query;
             const listDiv = document.getElementById('manage-list');
             listDiv.innerHTML = "";
-
-            if (error) { console.error(error); return; }
-
             if (!data || data.length === 0) {
-                listDiv.innerHTML = "<div style='grid-column:1/-1; text-align:center; padding:30px; color:#999;'>등록된 게시글이 없습니다.</div>";
+                listDiv.innerHTML = "<div style='text-align:center; padding:30px;'>글이 없습니다.</div>";
                 return;
             }
 
             data.forEach(item => {
-                let thumb = item.thumbnail_url;
-
-                if (!thumb || thumb === 'null' || thumb === 'undefined' || thumb.trim() === '') {
-                    thumb = null;
-                }
-
-                if (!thumb && item.content) {
-                    try {
-                        const parser = new DOMParser();
-                        const doc = parser.parseFromString(item.content, 'text/html');
-                        const firstImg = doc.querySelector('img');
-                        if (firstImg && firstImg.src) {
-                            thumb = firstImg.src;
-                        }
-                    } catch (e) { console.error(e); }
-                }
-
-                if (!thumb && item.video_url) {
-                    const yId = window.getYoutubeId(item.video_url);
-                    if (yId) thumb = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
-                }
-
-                if (!thumb) thumb = NO_IMAGE_URL;
-
+                const thumb = item.thumbnail_url || NO_IMAGE_URL;
                 const card = document.createElement('div');
                 card.className = 'post-card';
+                card.onclick = () => location.href = `view.html?id=${item.id}`;
                 card.innerHTML = `
-                                <div class="post-thumb">
-                                    <img src="${thumb}"
-                                         style="object-fit: contain; width: 100%; height: 100%;"
-                                         onerror="this.onerror=null; this.src='${NO_IMAGE_URL}';">
-                                </div>
-                                <div class="post-info">
-                                    <span class="category-badge">${item.category}</span>
-                                    <h4 class="card-title">${item.title}</h4>
-                                    <div class="card-text">순서: ${item.order_num || 0}</div>
-                                </div>
-                                <div class="post-actions">
-                                    <button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="btn-mini edit">수정</button>
-                                    <button onclick='deletePost(${item.id})' class="btn-mini del">삭제</button>
-                                </div>
-                            `;
+                        <div class="post-thumb"><img src="${thumb}" style="width:100%; height:100%; object-fit:cover;"></div>
+                        <div class="post-info">
+                            <span class="category-badge">${item.category}</span>
+                            <h4 class="card-title">${item.title}</h4>
+                            <div class="card-text">순서: ${item.order_num || 0}</div>
+                        </div>
+                        <div class="post-actions">
+                            <button onclick='event.stopPropagation(); editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="btn-mini edit">수정</button>
+                            <button onclick='event.stopPropagation(); deletePost(${item.id})' class="btn-mini del">삭제</button>
+                        </div>`;
                 listDiv.appendChild(card);
             });
-        }
-
-        async function uploadPost() {
-            const title = document.getElementById('post-title').value;
-            const content = quill.root.innerHTML;
-            const category = document.getElementById('post-category').value;
-            const orderNum = document.getElementById('post-order').value;
-            const youtube = document.getElementById('youtube-url').value;
-            const link = document.getElementById('post-link').value;
-
-            const thumbFile = document.getElementById('post-thumb-file').files[0];
-            const detailFile = document.getElementById('post-file').files[0];
-
-            if (!title) return alert("제목을 입력해주세요.");
-
-            showLoading(true);
-
-            let thumbUrl = originalThumbUrl;
-            let detailUrl = originalDetailUrl;
-
-            // 썸네일 업로드
-            if (thumbFile) {
-                const fileName = `thumb_${Date.now()}_${thumbFile.name}`;
-                const { data, error } = await window.sb.storage.from('images').upload(fileName, thumbFile);
-                if (error) { showLoading(false); return alert("썸네일 업로드 실패: " + error.message); }
-                const { data: publicData } = window.sb.storage.from('images').getPublicUrl(fileName);
-                thumbUrl = publicData.publicUrl;
-            }
-
-            // 상세 이미지(또는 동영상) 업로드
-            if (detailFile) {
-                const fileName = `detail_${Date.now()}_${detailFile.name}`;
-                const { data, error } = await window.sb.storage.from('images').upload(fileName, detailFile);
-                if (error) { showLoading(false); return alert("상세 파일 업로드 실패: " + error.message); }
-                const { data: publicData } = window.sb.storage.from('images').getPublicUrl(fileName);
-                detailUrl = publicData.publicUrl;
-            }
-
-            const postData = {
-                title, content, category,
-                image_url: detailUrl, thumbnail_url: thumbUrl,
-                video_url: youtube, link_url: link,
-                order_num: parseInt(orderNum) || 0
-            };
-
-            let result;
-            if (editingId) {
-                result = await window.sb.from('total_posts').update(postData).eq('id', editingId);
-            } else {
-                result = await window.sb.from('total_posts').insert([postData]);
-            }
-
-            showLoading(false);
-
-            if (result.error) {
-                alert("저장 실패: " + result.error.message);
-            } else {
-                alert(editingId ? "수정되었습니다." : "등록되었습니다.");
-                cancelEdit();
-                loadManageList();
-                window.scrollTo({ top: document.querySelector('.panel-box:last-child').offsetTop - 100, behavior: 'smooth' });
-            }
         }
 
         window.editPost = function (item) {
             editingId = item.id;
             originalDetailUrl = item.image_url;
             originalThumbUrl = item.thumbnail_url;
-
             document.getElementById('post-category').value = item.category;
             document.getElementById('post-title').value = item.title;
-
             quill.root.innerHTML = item.content || "";
-
             document.getElementById('youtube-url').value = item.video_url || "";
             document.getElementById('post-link').value = item.link_url || "";
             document.getElementById('post-order').value = item.order_num || 0;
 
-            document.getElementById('post-thumb-file').value = "";
-            document.getElementById('post-file').value = "";
+            document.getElementById('thumb-manage-area').style.display = item.thumbnail_url ? "block" : "none";
+            document.getElementById('file-manage-area').style.display = item.image_url ? "block" : "none";
+            document.getElementById('delete-thumb-check').checked = false;
+            document.getElementById('delete-file-check').checked = false;
 
-            document.getElementById('current-thumb-msg').innerText = item.thumbnail_url ? "기존 썸네일 유지됨" : "등록된 썸네일 없음";
-            document.getElementById('current-file-msg').innerText = item.image_url ? "기존 상세파일 유지됨" : "등록된 상세파일 없음";
-
-            document.getElementById('form-title').innerText = "✏️ 게시글 수정 중...";
-            document.getElementById('form-title').style.color = "#d63031";
+            document.getElementById('form-title').innerText = "✏️ 수정 중...";
             document.getElementById('btn-submit').innerText = "수정 완료";
             document.getElementById('btn-cancel-edit').style.display = "inline-block";
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
 
+        async function uploadPost() {
+            const title = document.getElementById('post-title').value;
+            if (!title) return alert("제목 필수");
+            showLoading(true);
+
+            let thumbUrl = document.getElementById('delete-thumb-check').checked ? null : originalThumbUrl;
+            let detailUrl = document.getElementById('delete-file-check').checked ? null : originalDetailUrl;
+
+            const tFile = document.getElementById('post-thumb-file').files[0];
+            const dFile = document.getElementById('post-file').files[0];
+
+            if (tFile) {
+                const { data } = await window.sb.storage.from('images').upload(`t_${Date.now()}`, tFile);
+                if (data) thumbUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+            }
+            if (dFile) {
+                const { data } = await window.sb.storage.from('images').upload(`d_${Date.now()}`, dFile);
+                if (data) detailUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
+            }
+
+            const postData = {
+                title, content: quill.root.innerHTML,
+                category: document.getElementById('post-category').value,
+                order_num: parseInt(document.getElementById('post-order').value) || 0,
+                video_url: document.getElementById('youtube-url').value,
+                link_url: document.getElementById('post-link').value,
+                thumbnail_url: thumbUrl, image_url: detailUrl
+            };
+
+            const { error } = editingId ? await window.sb.from('total_posts').update(postData).eq('id', editingId) : await window.sb.from('total_posts').insert([postData]);
+            showLoading(false);
+            if (error) alert(error.message); else { alert("저장됨"); cancelEdit(); loadManageList(); }
+        }
+
         window.cancelEdit = function () {
             editingId = null;
-            originalDetailUrl = null;
-            originalThumbUrl = null;
-
             document.getElementById('post-title').value = "";
             quill.root.innerHTML = "";
-
-            document.getElementById('post-category').value = "season";
-            document.getElementById('post-thumb-file').value = "";
-            document.getElementById('post-file').value = "";
-            document.getElementById('youtube-url').value = "";
-            document.getElementById('post-link').value = "";
-            document.getElementById('post-order').value = "0";
-
-            document.getElementById('current-thumb-msg').innerText = "";
-            document.getElementById('current-file-msg').innerText = "";
-
+            document.querySelectorAll('input[type="file"]').forEach(i => i.value = "");
+            document.getElementById('thumb-manage-area').style.display = "none";
+            document.getElementById('file-manage-area').style.display = "none";
             document.getElementById('form-title').innerText = "📝 새 글 작성하기";
-            document.getElementById('form-title').style.color = "#1a3c6e";
             document.getElementById('btn-submit').innerText = "업로드 저장";
             document.getElementById('btn-cancel-edit').style.display = "none";
         };
 
-        window.deletePost = async function (id) {
-            if (confirm("정말 삭제하시겠습니까? 복구할 수 없습니다.")) {
-                const { error } = await window.sb.from('total_posts').delete().eq('id', id);
-                if (error) alert("삭제 실패: " + error.message);
-                else {
-                    if (editingId === id) cancelEdit();
-                    loadManageList();
-                }
-            }
-        };
+        window.deletePost = async function (id) { if (confirm("삭제?")) { await window.sb.from('total_posts').delete().eq('id', id); loadManageList(); } };
     </script>
 </body>
 </html>

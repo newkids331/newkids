@@ -147,6 +147,7 @@ h2 {
     height: 100%;
     background: rgba(255,255,255,0.8);
     z-index: 9999;
+    /* Flexbox 중앙 정렬 */
     justify-content: center;
     align-items: center;
     font-size: 1.5rem;
@@ -512,7 +513,7 @@ header {
     border-bottom: 1px solid #eee;
 }
 
-    /* [중요 수정] object-fit: contain으로 설정하여 이미지가 잘리지 않게 함 */
+    /* object-fit: contain으로 설정하여 이미지가 잘리지 않게 함 */
     .card-img, .product-img, .post-thumb img {
         width: 100%;
         height: 100%;
@@ -575,8 +576,9 @@ header {
     font-size: 0.9rem;
 }
 
+/* [수정됨] 영상 하단 여백 제거 (0px) */
 .view-media {
-    margin-bottom: 30px;
+    margin-bottom: 0;
     max-width: 100%;
 }
 
@@ -605,8 +607,13 @@ header {
     text-align: center;
 }
 
+    /* [수정됨] 상세 페이지 에디터 높이 자동 및 여백 제거 */
     .view-content.ql-editor {
+        min-height: auto !important; /* 최소 높이 해제 */
+        height: auto !important;
         text-align: center !important;
+        padding: 0 !important; /* 패딩 제거 */
+        overflow-y: visible; /* 잘림 방지 */
     }
 
         .view-content.ql-editor img {
@@ -616,12 +623,14 @@ header {
 
         .view-content.ql-editor p {
             text-align: inherit;
+            margin: 0;
         }
 
+/* [수정됨] 목록 버튼 상단 여백 축소 (20px) */
 .btn-list {
     display: block;
     width: 200px;
-    margin: 50px auto 0;
+    margin: 20px auto 0;
     padding: 15px;
     background: var(--primary-color);
     color: #fff;
@@ -1269,4 +1278,39 @@ textarea.form-input {
     .card h3 {
         font-size: 1.1rem;
     }
+}
+
+/* 관리자 페이지 추가 스타일 */
+.file-manage-area {
+    margin-top: 8px;
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    display: inline-block;
+    border: 1px dashed #ddd;
+}
+
+.del-label {
+    color: #e74c3c;
+    margin-left: 12px;
+    cursor: pointer;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.post-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .post-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+.post-actions {
+    position: relative;
+    z-index: 10; /* 버튼이 카드 클릭 이벤트보다 우선순위를 갖게 함 */
 }

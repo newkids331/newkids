@@ -9,7 +9,6 @@
 </head>
 <body>
     <header></header>
-
     <div id="loading" class="loading-overlay">내용을 불러오는 중입니다...</div>
 
     <section class="sub-hero bg-season" id="view-hero">
@@ -23,15 +22,11 @@
         <div class="container">
             <div class="view-box">
                 <div class="view-header">
-                    <h2 class="view-title" id="post-title">제목 로딩 중...</h2>
+                    <h2 class="view-title" id="post-title">로딩 중...</h2>
                     <p class="view-date" id="post-date">0000-00-00</p>
                 </div>
-
                 <div class="view-media" id="view-media" style="display:none;"></div>
-
-                <div class="view-content ql-editor" id="post-content">
-                </div>
-
+                <div class="view-content ql-editor" id="post-content"></div>
                 <a href="javascript:history.back()" class="btn-list">목록으로 돌아가기</a>
             </div>
         </div>
@@ -45,118 +40,55 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // URL에서 글 ID 가져오기 (?id=123)
             const params = new URLSearchParams(window.location.search);
             const postId = params.get('id');
-
-            if (!postId) {
-                alert("잘못된 접근입니다.");
-                location.href = "index.html";
-                return;
-            }
-
-            loadPostDetail(postId);
+            if (postId) loadPostDetail(postId);
         });
 
-        // [신규] 파일 주소를 보고 동영상인지 판단하는 함수
         function isVideo(url) {
-            if (!url) return false;
-            // mp4, webm, ogg, mov, avi 등 동영상 확장자 체크
-            return /\.(mp4|webm|ogg|mov|avi|mkv|qt)(\?|$)/i.test(url);
+            return /\.(mp4|webm|ogg|mov|avi|mkv)(\?|$)/i.test(url);
         }
 
         async function loadPostDetail(id) {
-            const loading = document.getElementById('loading');
-            loading.style.display = 'flex';
-
+            document.getElementById('loading').style.display = 'flex';
             try {
-                // Supabase에서 데이터 조회
-                const { data, error } = await window.sb
-                    .from('total_posts')
-                    .select('*')
-                    .eq('id', id)
-                    .single();
+                const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
+                if (error || !data) throw new Error("데이터 없음");
 
-                if (error) throw error;
-                if (!data) throw new Error("게시글을 찾을 수 없습니다.");
-
-                // 데이터 바인딩
                 document.getElementById('post-title').innerText = data.title;
                 document.getElementById('post-date').innerText = window.formatDate(data.created_at);
                 document.getElementById('post-content').innerHTML = data.content;
 
-                // [핵심 수정] 미디어(동영상/이미지) 처리 로직
                 const mediaBox = document.getElementById('view-media');
+                mediaBox.innerHTML = '';
 
-                // 1. 유튜브 링크가 입력된 경우 (video_url 우선)
+                // 1. 유튜브/비디오 URL 우선 처리
                 if (data.video_url && data.video_url !== 'null' && data.video_url.trim() !== '') {
-                    const youtubeId = window.getYoutubeId(data.video_url);
-
-                    if (youtubeId) {
-                        // 유튜브 ID가 추출되면 iframe
-                        mediaBox.innerHTML = `
-                                <iframe src="https://www.youtube.com/embed/${youtubeId}"
-                                    frameborder="0"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowfullscreen>
-                                </iframe>
-                            `;
-                    } else {
-                        // 유튜브 링크가 아닌 일반 동영상 링크일 경우 video 태그
-                        mediaBox.innerHTML = `
-                                <video controls playsinline style="width:100%; border-radius:10px;">
-                                    <source src="${data.video_url}">
-                                    브라우저가 동영상을 지원하지 않습니다.
-                                </video>
-                            `;
-                    }
+                    const yid = window.getYoutubeId(data.video_url);
+                    mediaBox.innerHTML = yid ? `<iframe src="https://www.youtube.com/embed/${yid}" frameborder="0" allowfullscreen></iframe>`
+                        : `<video controls style="width:100%; border-radius:10px;"><source src="${data.video_url}"></video>`;
                     mediaBox.style.display = 'block';
                 }
-                // 2. 직접 업로드한 파일이 있는 경우 (image_url)
-                else if (data.image_url && data.image_url !== 'null') {
-                    // [수정] 파일이 동영상인지 이미지인지 확인!
+                // 2. 업로드 파일 처리 (이미지가 실제로 있을 때만)
+                else if (data.image_url && data.image_url !== 'null' && data.image_url.trim() !== '') {
                     if (isVideo(data.image_url)) {
-                        // 동영상 파일이면 video 태그 사용
-                        mediaBox.innerHTML = `
-                                <video controls playsinline style="width:100%; border-radius:10px;">
-                                    <source src="${data.image_url}">
-                                    브라우저가 동영상을 지원하지 않습니다.
-                                </video>
-                            `;
+                        mediaBox.innerHTML = `<video controls style="width:100%; border-radius:10px;"><source src="${data.image_url}"></video>`;
                     } else {
-                        // 이미지 파일이면 기존대로 img 태그 사용
-                        mediaBox.innerHTML = `<img src="${data.image_url}" alt="상세 이미지">`;
+                        mediaBox.innerHTML = `<img src="${data.image_url}" onerror="this.parentElement.style.display='none'">`;
                     }
                     mediaBox.style.display = 'block';
                 } else {
-                    // 미디어 없음
                     mediaBox.style.display = 'none';
                 }
 
-                // 카테고리에 따라 상단 배너 배경 변경
                 updateHeroBackground(data.category);
-
-            } catch (err) {
-                console.error(err);
-                alert("글을 불러오는데 실패했습니다.");
-                history.back();
-            } finally {
-                loading.style.display = 'none';
-            }
+            } catch (err) { alert("불러오기 실패"); history.back(); }
+            finally { document.getElementById('loading').style.display = 'none'; }
         }
 
-        // 카테고리별 배너 배경 클래스 매핑
         function updateHeroBackground(category) {
             const hero = document.getElementById('view-hero');
-            const catMap = {
-                'season': 'bg-season',
-                'culture': 'bg-culture',
-                'performance': 'bg-performance',
-                'korean': 'bg-child', 'art': 'bg-child', 'science': 'bg-child',
-                'coding': 'bg-child', 'english': 'bg-child', 'integrated': 'bg-child'
-            };
-
-            // 기존 bg 클래스 제거 후 새 클래스 추가
+            const catMap = { 'season': 'bg-season', 'culture': 'bg-culture', 'performance': 'bg-performance', 'korean': 'bg-child', 'art': 'bg-child', 'science': 'bg-child', 'coding': 'bg-child', 'english': 'bg-child', 'integrated': 'bg-child' };
             hero.className = 'sub-hero ' + (catMap[category] || 'bg-gray');
         }
     </script>
