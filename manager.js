@@ -16,7 +16,7 @@ function loadHeader() {
                 <a href="index.html" class="logo-link"><img src="${CONFIG.LOGO_URL}" alt="NEW KIDS" class="logo-img"></a>
                 <button class="mobile-btn" onclick="window.toggleMenu()">☰</button>
                 <ul class="nav-menu" id="navMenu">
-                    <li><a href="index.html">홈으로</a></li>
+                    
                     <li>
                         <a href="javascript:void(0)" onclick="window.toggleSubMenu(this)">교재소개 ▾</a>
                         <ul class="dropdown">
@@ -68,6 +68,22 @@ function loadFooter() {
 window.toggleMenu = function () { document.getElementById('navMenu').classList.toggle('active'); };
 window.toggleSubMenu = function (el) { if (window.innerWidth <= 768) el.parentElement.classList.toggle('sub-open'); };
 
+// [신규 기능] 스크롤 버튼 생성 (맨위로/맨밑으로)
+function addScrollButtons() {
+    if (document.querySelector('.scroll-btns')) return;
+    const btnHtml = `
+        <div class="scroll-btns">
+            <button class="btn-scroll" onclick="scrollToTop()" title="맨 위로">▲</button>
+            <button class="btn-scroll" onclick="scrollToBottom()" title="맨 아래로">▼</button>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', btnHtml);
+}
+
+window.scrollToTop = function () { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+window.scrollToBottom = function () { window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }); }
+
+
 // [유틸리티] 유튜브 ID 추출
 window.getYoutubeId = function (url) {
     if (!url) return null;
@@ -80,10 +96,12 @@ window.formatDate = function (dateStr) {
     return dateStr ? dateStr.split('T')[0] : '';
 };
 
+
 // DOM 로드 후 실행
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();
+    addScrollButtons(); // 스크롤 버튼 활성화
 
     // 모바일 메뉴 닫기 (외부 클릭 시)
     document.addEventListener('click', function (e) {

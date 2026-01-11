@@ -5,6 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>상세 정보</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <style>
+        /* 상세 페이지 전용 스타일 */
+        .view-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #333;
+            margin-top: 30px;
+            /* 에디터 스타일 상속 */
+            font-family: 'Pretendard', sans-serif;
+        }
+        /* Quill 에디터 기본 스타일 제거 (테두리 등) */
+        .ql-editor {
+            padding: 0;
+            overflow-y: visible;
+        }
+    </style>
 </head>
 <body>
     <header></header>
@@ -16,8 +33,11 @@
                 <h1 id="v-title" class="view-title"></h1>
                 <div id="v-date" class="view-date"></div>
             </div>
+
             <div id="v-media-wrap" class="view-media"></div>
-            <div id="v-content" class="view-content"></div>
+
+            <div id="v-content" class="view-content ql-editor"></div>
+
             <a href="javascript:history.back()" class="btn-list">목록으로</a>
         </div>
     </div>
@@ -29,14 +49,15 @@
         const params = new URLSearchParams(window.location.search);
         const POST_ID = params.get('id');
 
-        document.addEventListener("DOMContentLoaded", function () {
-            const checkSb = setInterval(() => { if (window.sb) { clearInterval(checkSb); loadDetail(window.sb); } }, 100);
-        });
+        document.addEventListener("DOMContentLoaded", async function () {
+            if (!POST_ID) { alert("잘못된 접근입니다."); location.href = "index.html"; return; }
 
-        async function loadDetail(sb) {
-            if (!POST_ID) return alert("잘못된 접근입니다.");
-            const { data, error } = await sb.from('total_posts').select('*').eq('id', POST_ID).single();
-            if (error || !data) return alert("글을 찾을 수 없습니다.");
+            const { data, error } = await window.sb.from('total_posts').select('*').eq('id', POST_ID).single();
+            document.getElementById('loading').style.display = 'none';
+
+            if (error || !data) { alert("글을 찾을 수 없습니다."); location.href = "index.html"; return; }
+
+            document.getElementById('view-area').style.display = 'block';
 
             const catNames = {
                 'season': '시즌행사', 'culture': '원어민행사', 'performance': '부모참여',
@@ -46,7 +67,9 @@
             document.getElementById('v-category').innerText = catNames[data.category] || data.category;
             document.getElementById('v-title').innerText = data.title;
             document.getElementById('v-date').innerText = window.formatDate(data.created_at);
-            document.getElementById('v-content').innerText = data.content;
+
+            // [중요 수정] innerText -> innerHTML 로 변경 (태그 적용)
+            document.getElementById('v-content').innerHTML = data.content;
 
             const mediaWrap = document.getElementById('v-media-wrap');
             let imgList = [];
@@ -60,9 +83,7 @@
                 else mediaHtml += `<img src="${url}" alt="이미지">`;
             });
             mediaWrap.innerHTML = mediaHtml;
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('view-area').style.display = 'block';
-        }
+        });
     </script>
 </body>
 </html>
