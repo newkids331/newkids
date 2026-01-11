@@ -79,8 +79,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>상세 이미지 (선택 - 통이미지가 필요할 때만 사용)</label>
-                    <input type="file" id="post-file" class="form-input" accept="image/*">
+                    <label>상세 이미지/동영상 (선택 - 통이미지나 영상 파일)</label>
+                    <input type="file" id="post-file" class="form-input" accept="image/*,video/*">
                     <div id="current-file-msg" class="file-status"></div>
                 </div>
 
@@ -145,22 +145,19 @@
         let originalThumbUrl = null;
         let quill;
 
+        const NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image";
+
         document.addEventListener("DOMContentLoaded", async function () {
 
-            // 1. 이 줄을 꼭 추가해주세요! (라이브러리 등록)
             Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
 
-            // Quill 에디터 초기화
             quill = new Quill('#editor-container', {
                 theme: 'snow',
                 placeholder: '여기에 내용을 작성하세요...',
                 modules: {
-                    // 2. 기존 imageResize 코드는 지우고, 아래 한 줄을 넣어주세요.
                     blotFormatter: {},
-
                     toolbar: {
                         container: [
-                            // ... (기존 툴바 설정 그대로 두세요) ...
                             [{ 'header': [1, 2, 3, false] }],
                             ['bold', 'italic', 'underline', 'strike'],
                             [{ 'color': [] }, { 'background': [] }],
@@ -175,7 +172,6 @@
                 }
             });
 
-            // 드래그 앤 드롭 핸들러 등록
             const editorRoot = quill.root;
             editorRoot.addEventListener('drop', handleDrop, false);
             editorRoot.addEventListener('dragover', function (e) { e.preventDefault(); }, false);
@@ -195,12 +191,10 @@
             }
         });
 
-        // 1. 이미지 버튼 핸들러
         function imageHandler() {
             document.getElementById('hidden-image-input').click();
         }
 
-        // 2. 드래그 앤 드롭 핸들러
         function handleDrop(e) {
             e.preventDefault();
             if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -208,7 +202,6 @@
             }
         }
 
-        // 3. 다중 이미지 업로드 및 삽입
         async function uploadAndInsertImages(files) {
             showLoading(true);
             const range = quill.getSelection(true);
@@ -285,28 +278,47 @@
 
             data.forEach(item => {
                 let thumb = item.thumbnail_url;
+
+                if (!thumb || thumb === 'null' || thumb === 'undefined' || thumb.trim() === '') {
+                    thumb = null;
+                }
+
+                if (!thumb && item.content) {
+                    try {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(item.content, 'text/html');
+                        const firstImg = doc.querySelector('img');
+                        if (firstImg && firstImg.src) {
+                            thumb = firstImg.src;
+                        }
+                    } catch (e) { console.error(e); }
+                }
+
                 if (!thumb && item.video_url) {
                     const yId = window.getYoutubeId(item.video_url);
                     if (yId) thumb = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
                 }
-                if (!thumb) thumb = 'https://via.placeholder.com/400x300?text=No+Image';
+
+                if (!thumb) thumb = NO_IMAGE_URL;
 
                 const card = document.createElement('div');
                 card.className = 'post-card';
                 card.innerHTML = `
-                            <div class="post-thumb">
-                                <img src="${thumb}">
-                            </div>
-                            <div class="post-info">
-                                <span class="category-badge">${item.category}</span>
-                                <h4 class="card-title">${item.title}</h4>
-                                <div class="card-text">순서: ${item.order_num || 0}</div>
-                            </div>
-                            <div class="post-actions">
-                                <button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="btn-mini edit">수정</button>
-                                <button onclick='deletePost(${item.id})' class="btn-mini del">삭제</button>
-                            </div>
-                        `;
+                                <div class="post-thumb">
+                                    <img src="${thumb}"
+                                         style="object-fit: cover; width: 100%; height: 100%;"
+                                         onerror="this.onerror=null; this.src='${NO_IMAGE_URL}';">
+                                </div>
+                                <div class="post-info">
+                                    <span class="category-badge">${item.category}</span>
+                                    <h4 class="card-title">${item.title}</h4>
+                                    <div class="card-text">순서: ${item.order_num || 0}</div>
+                                </div>
+                                <div class="post-actions">
+                                    <button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="btn-mini edit">수정</button>
+                                    <button onclick='deletePost(${item.id})' class="btn-mini del">삭제</button>
+                                </div>
+                            `;
                 listDiv.appendChild(card);
             });
         }
@@ -338,11 +350,11 @@
                 thumbUrl = publicData.publicUrl;
             }
 
-            // 상세 이미지(통이미지) 업로드
+            // 상세 이미지(또는 동영상) 업로드
             if (detailFile) {
                 const fileName = `detail_${Date.now()}_${detailFile.name}`;
                 const { data, error } = await window.sb.storage.from('images').upload(fileName, detailFile);
-                if (error) { showLoading(false); return alert("상세 이미지 업로드 실패: " + error.message); }
+                if (error) { showLoading(false); return alert("상세 파일 업로드 실패: " + error.message); }
                 const { data: publicData } = window.sb.storage.from('images').getPublicUrl(fileName);
                 detailUrl = publicData.publicUrl;
             }
@@ -391,7 +403,7 @@
             document.getElementById('post-file').value = "";
 
             document.getElementById('current-thumb-msg').innerText = item.thumbnail_url ? "기존 썸네일 유지됨" : "등록된 썸네일 없음";
-            document.getElementById('current-file-msg').innerText = item.image_url ? "기존 상세이미지 유지됨" : "등록된 상세이미지 없음";
+            document.getElementById('current-file-msg').innerText = item.image_url ? "기존 상세파일 유지됨" : "등록된 상세파일 없음";
 
             document.getElementById('form-title').innerText = "✏️ 게시글 수정 중...";
             document.getElementById('form-title').style.color = "#d63031";

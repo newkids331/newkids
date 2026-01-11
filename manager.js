@@ -125,13 +125,57 @@ function enableAutoResizeTextarea() {
     });
 }
 
+// [신규 기능] 하단 '상담문의' 고정 버튼 (관리자 페이지 제외)
+function addConsultationBanner() {
+    if (document.getElementById('login-section') || document.querySelector('.consult-banner')) return;
+
+    const bannerHtml = `
+        <div class="consult-banner">
+            <a href="proposal.html" class="mobile-only-link">
+                💬 상담문의 / 견적요청
+            </a>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', bannerHtml);
+}
+
 // DOM 로드 후 실행
 document.addEventListener("DOMContentLoaded", function () {
     loadHeader();
     loadFooter();
     addScrollButtons();
     enableAutoResizeTextarea();
-    // addConsultationBanner(); <-- 삭제됨
+    addConsultationBanner();
+
+    // [신규] 텍스트 박스(입력창)를 제외한 모든 요소에서 더블 클릭 방지
+    document.addEventListener('dblclick', function (e) {
+        const target = e.target;
+        const tagName = target.tagName;
+
+        // 더블 클릭을 허용할 요소인지 확인
+        let isAllowed = false;
+
+        // 1. Textarea 허용
+        if (tagName === 'TEXTAREA') {
+            isAllowed = true;
+        }
+        // 2. Input 중 텍스트 입력 관련 타입 허용
+        else if (tagName === 'INPUT') {
+            const allowedTypes = ['text', 'password', 'email', 'number', 'search', 'tel', 'url'];
+            if (allowedTypes.includes(target.type)) {
+                isAllowed = true;
+            }
+        }
+        // 3. 에디터 등 편집 가능한 영역 허용
+        else if (target.isContentEditable) {
+            isAllowed = true;
+        }
+
+        // 허용되지 않은 요소라면 더블 클릭 이벤트 차단
+        if (!isAllowed) {
+            e.preventDefault();
+        }
+    }, { passive: false });
 
     // 모바일 메뉴 외부 클릭 시 닫기
     document.addEventListener('click', function (e) {
