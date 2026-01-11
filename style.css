@@ -142,7 +142,7 @@ h2 {
 }
 
 /* =========================================
-   3. 헤더 (Header)
+   3. 헤더 (Header) - [수정됨: 아코디언 로직 적용]
    ========================================= */
 header {
     width: 100%;
@@ -180,10 +180,14 @@ ul.nav-menu {
     padding: 20px 0;
 }
 
+    /* 메뉴 링크 스타일 */
     .nav-menu > li > a {
         font-size: 1.05rem;
         font-weight: 600;
         color: #333;
+        display: flex; /* 화살표 정렬용 */
+        align-items: center;
+        gap: 5px;
     }
 
         .nav-menu > li > a:hover {
@@ -195,6 +199,7 @@ ul.nav-menu {
     font-weight: 700 !important;
 }
 
+/* 드롭다운 메뉴 (기본 숨김) */
 .dropdown {
     display: none;
     position: absolute;
@@ -211,10 +216,10 @@ ul.nav-menu {
     text-align: left;
 }
 
-@media (min-width: 769px) {
-    .nav-menu li:hover .dropdown {
-        display: block;
-    }
+/* [중요] manager.js에서 .active 클래스를 줄 때만 열림 (아코디언) */
+.nav-menu > li.active .dropdown {
+    display: block;
+    animation: fadeIn 0.3s ease;
 }
 
 .dropdown li a {
@@ -223,6 +228,7 @@ ul.nav-menu {
     font-size: 0.95rem;
     color: #555;
     text-align: center;
+    width: 100%;
 }
 
     .dropdown li a:hover {
@@ -231,6 +237,19 @@ ul.nav-menu {
         font-weight: bold;
     }
 
+/* 화살표 아이콘 회전 효과 */
+.arrow {
+    font-size: 0.8rem;
+    transition: transform 0.3s ease;
+    display: inline-block;
+}
+
+/* 메뉴가 열리면 화살표 180도 회전 */
+.nav-menu > li.active .arrow {
+    transform: rotate(180deg);
+}
+
+/* 모바일 햄버거 버튼 */
 .mobile-btn {
     display: none;
     font-size: 1.8rem;
@@ -240,13 +259,14 @@ ul.nav-menu {
     color: var(--primary-color);
 }
 
+/* === 모바일 반응형 스타일 (768px 이하) === */
 @media (max-width: 768px) {
     .mobile-btn {
         display: block;
     }
 
     .nav-menu {
-        display: none;
+        display: none; /* 기본 숨김 */
         flex-direction: column;
         position: absolute;
         top: 70px;
@@ -256,8 +276,10 @@ ul.nav-menu {
         box-shadow: 0 10px 20px rgba(0,0,0,0.1);
         border-top: 1px solid #eee;
         padding: 0;
+        height: auto;
     }
 
+        /* 햄버거 버튼 클릭 시 메뉴 전체 열림 */
         .nav-menu.active {
             display: flex;
         }
@@ -270,21 +292,52 @@ ul.nav-menu {
         }
 
             .nav-menu > li > a {
-                display: block;
-                padding: 15px 0;
+                display: flex;
+                justify-content: space-between; /* 화살표 오른쪽 끝으로 */
+                padding: 15px 20px;
+                width: 100%;
             }
 
+    /* 모바일 드롭다운 스타일 (밀어내기 방식) */
     .dropdown {
-        position: static;
+        position: static; /* 둥둥 뜨지 않고 제자리에 */
         transform: none;
         box-shadow: none;
         border: none;
-        background: #f8f9fa;
+        background: #f8f9fa; /* 배경색 다르게 */
         width: 100%;
+        border-top: 1px solid #eee;
     }
 
-    .sub-open .dropdown {
-        display: block;
+        .dropdown li a {
+            padding-left: 30px; /* 들여쓰기 */
+            text-align: left;
+        }
+}
+
+/* 페이드인 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) translateX(-50%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) translateX(-50%);
+    }
+}
+
+/* 모바일용 애니메이션 (위치 이동 없음) */
+@media (max-width: 768px) {
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
 }
 
@@ -636,6 +689,7 @@ ul.nav-menu {
         width: 150px;
         min-width: 150px;
         padding: 8px;
+        box-sizing: border-box;
     }
 
     .filter-box button {
@@ -734,6 +788,11 @@ ul.nav-menu {
     border-bottom-right-radius: 6px;
     font-size: 1rem;
     font-family: 'Pretendard', sans-serif;
+}
+
+/* 에디터 내 이미지에 마우스 올리면 커서 변경 (리사이즈 가능 암시) */
+.ql-editor img {
+    cursor: pointer;
 }
 
 /* 드래그 오버 시 효과 */
@@ -1018,4 +1077,15 @@ footer {
         height: 40px;
         font-size: 1rem;
     }
+}
+/* =========================================
+   11. [추가] 텍스트 박스 자동 높이 조절 스타일
+   ========================================= */
+
+/* textarea 태그에만 적용되는 설정 */
+textarea.form-input {
+    min-height: 120px; /* 처음에 보여줄 기본 높이 */
+    resize: none; /* 사용자가 마우스로 크기 조절 못하게 막음 (자동조절과 충돌 방지) */
+    overflow-y: hidden; /* 내용이 넘쳐도 스크롤바 안 생기게 숨김 */
+    line-height: 1.6;
 }
