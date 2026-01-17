@@ -742,9 +742,9 @@ header {
 .order-list-box {
     display: grid;
     grid-template-columns: repeat(3, 1fr) !important;
-    gap: 15px !important; /* [수정] 30px -> 15px (견적 페이지와 통일) */
+    gap: 15px !important;
     margin-top: 20px;
-    align-items: start; /* [중요] 늘어남 방지 */
+    align-items: start;
 }
 
 .category-wrapper {
@@ -772,7 +772,7 @@ header {
         background-color: #fcfcfc;
     }
 
-/* Wrapper가 active일 때 헤더 스타일 */
+/* Wrapper가 active일 때 헤더 스타일 (글자색도 흰색으로) */
 .category-wrapper.active .order-category-header,
 .sub-cat-wrapper.active .sub-cat-header {
     background-color: var(--primary-color);
@@ -780,6 +780,11 @@ header {
     border-color: var(--primary-color);
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
+}
+
+/* [추가] Active 상태일 때 내부 텍스트 색상 강제 지정 (Proposal용) */
+.sub-cat-wrapper.active .sub-cat-title span {
+    color: #fff !important;
 }
 
 .toggle-icon, .sub-toggle-icon {
@@ -814,11 +819,12 @@ header {
     padding: 15px 20px;
     border-bottom: 1px solid #eee;
     cursor: pointer;
-    display: flex;
-    align-items: center;
+    display: block;
 }
 
 .proposal-item {
+    display: flex;
+    align-items: center;
     justify-content: flex-start;
 }
 
@@ -838,11 +844,23 @@ header {
 }
 
 /* 발주 수량 입력 */
-.order-item-info h4 {
-    font-size: 1.05rem !important;
-    font-weight: 600 !important;
-    color: #333 !important;
-    margin: 0;
+.order-item-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 0;
+}
+
+    .order-item-info h4 {
+        font-size: 1.05rem !important;
+        font-weight: 600 !important;
+        color: #333 !important;
+        margin: 0;
+    }
+
+.order-item-row:hover .order-item-info h4 {
+    color: var(--primary-color) !important;
 }
 
 .check-indicator {
@@ -855,43 +873,41 @@ header {
     display: block !important;
 }
 
-.order-item-info {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-}
-
+/* 수량 입력 영역 */
 .dynamic-qty-container {
     display: none;
     background-color: #fafafa;
     padding: 15px;
-    border-top: 1px solid #eee;
+    border-top: 1px dashed #eee;
+    margin-top: 12px;
+    border-radius: 8px;
 }
 
 .order-item-row.active .dynamic-qty-container {
     display: block;
 }
 
+/* 입력 행 그리드 */
 .qty-row {
     display: grid !important;
-    grid-template-columns: 75px 1fr 40px !important;
-    gap: 5px !important;
+    grid-template-columns: 1fr 1.5fr 40px !important;
+    gap: 8px !important;
     margin-bottom: 10px !important;
     align-items: center !important;
 }
 
     .qty-row .age-select, .qty-row .dynamic-qty-input {
-        height: 45px !important;
-        padding: 0 5px !important;
+        height: 40px !important;
+        padding: 0 10px !important;
         text-align: center !important;
         width: 100% !important;
         border: 1px solid #ccc !important;
         border-radius: 6px !important;
+        background: #fff;
     }
 
 .btn-remove-row {
-    height: 45px !important;
+    height: 40px !important;
     width: 100% !important;
     padding: 0 !important;
     display: flex !important;
@@ -903,17 +919,29 @@ header {
     border-radius: 6px !important;
     cursor: pointer !important;
     font-size: 1.2rem !important;
+    transition: 0.2s;
 }
+
+    .btn-remove-row:hover {
+        background: #ff6b6b !important;
+        color: white !important;
+    }
 
 .btn-add-row {
     width: 100%;
     padding: 10px;
-    border: 1px dashed var(--primary-color);
+    border: 1px solid var(--primary-color);
     color: var(--primary-color);
     background: #fff;
     border-radius: 6px;
     cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
 }
+
+    .btn-add-row:hover {
+        background: #f0f7ff;
+    }
 
 /* 선택됨 강조 */
 .order-category-header.has-data, .sub-cat-header.has-checked {
@@ -935,17 +963,16 @@ header {
     }
 
 /* =========================================
-   9. [Proposal] 견적 요청 페이지 그리드
+   9. [Proposal] 견적 요청 페이지 스타일
    ========================================= */
 .proposal-grid-container {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
     margin-bottom: 40px;
-    align-items: start; /* [중요] 옆 박스 늘어남 방지 */
+    align-items: start;
 }
 
-/* Wrapper 스타일 */
 .sub-cat-wrapper {
     background: #fff;
     border: 1px solid #e0e0e0;
@@ -982,7 +1009,6 @@ header {
     color: #bbb;
 }
 
-/* Wrapper active일 때 아이콘 */
 .sub-cat-wrapper.active .sub-toggle-icon {
     transform: rotate(180deg);
     color: #fff;
