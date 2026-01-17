@@ -86,6 +86,7 @@
         }
 
         document.addEventListener("DOMContentLoaded", function () {
+            // manager.js 로드 대기
             const checkSb = setInterval(() => {
                 if (window.sb) {
                     clearInterval(checkSb);
@@ -93,6 +94,7 @@
                 }
             }, 100);
 
+            // 전화번호 자동완성
             const phoneInput = document.querySelector('input[name="phone"]');
             if (phoneInput) {
                 phoneInput.addEventListener('input', function (e) {
@@ -108,6 +110,7 @@
             }
         });
 
+        // [데이터 로드]
         async function loadDynamicProposalData(sb) {
             try {
                 const { data: catData, error: catError } = await sb
@@ -142,7 +145,7 @@
                     let html = "";
                     categoryCodes.forEach(code => {
                         const items = groupedData[code] || [];
-
+                        // 빈 카테고리도 표시 (사용자 확인용)
                         html += `
                             <div class="sub-cat-wrapper">
                                 <div class="sub-cat-header" onclick="toggleProposalCategory(this)">
@@ -180,26 +183,25 @@
             }
         }
 
-        // [아코디언 토글] 하나만 열리고 나머지는 닫힘
+        // [핵심 수정] order.html과 동일한 아코디언 로직 적용
         window.toggleProposalCategory = function (header) {
             if (window.event) window.event.stopPropagation();
 
+            // 1. 현재 클릭한 요소의 래퍼와 열림 상태 확인
             const wrapper = header.closest('.sub-cat-wrapper');
             const grid = wrapper.querySelector('.proposal-check-grid');
-
-            // 현재 클릭한 것이 이미 열려있는 상태인지 확인
             const isAlreadyActive = wrapper.classList.contains('active');
 
-            // 1. 모든 카테고리를 닫음 (초기화)
+            // 2. 다른 모든 카테고리 닫기 (초기화)
             document.querySelectorAll('.sub-cat-wrapper').forEach(w => {
-                w.classList.remove('active'); // 박스 활성화 해제
+                w.classList.remove('active'); // Wrapper에서 active 제거
                 const g = w.querySelector('.proposal-check-grid');
                 if (g) g.classList.remove('show'); // 내용 숨김
             });
 
-            // 2. 클릭한 것이 닫혀있던 상태라면 -> 열기
+            // 3. 클릭한 것이 닫혀있던 상태라면 -> 열기
             if (!isAlreadyActive) {
-                wrapper.classList.add('active'); // 박스 활성화 (배경색 변경 등)
+                wrapper.classList.add('active'); // Wrapper에 active 추가
                 if (grid) grid.classList.add('show'); // 내용 보이기
             }
         };
@@ -221,6 +223,7 @@
                 e.preventDefault();
                 const btn = form.querySelector('.btn-action');
                 const originalText = btn.innerText;
+
                 const checkedItems = [];
                 form.querySelectorAll('input[name="items"]:checked').forEach(cb => checkedItems.push(cb.value));
 
