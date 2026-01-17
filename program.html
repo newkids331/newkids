@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>뉴키즈 - 프로그램</title>
+    <link rel=\"stylesheet\" href=\"style.css\">
+</head>
+<body>
+    <header></header>
+    <div id="loading" class="loading-overlay" style="display: flex;">데이터를 불러오는 중입니다...</div>
+
+    <section class="sub-hero bg-season" id="view-hero">
+        <div class="container-wide">
+            <h1 id="page-title">프로그램</h1>
+            <p id="page-desc">뉴키즈의 특별한 활동을 소개합니다.</p>
+        </div>
+    </section>
+
+    <section>
+        <div class="container">
+            <div id="post-list" class="gallery-grid"></div>
+        </div>
+    </section>
+
+    <footer></footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script src="manager.js"></script>
+
+    <script>
+        const NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image";
+
+        document.addEventListener("DOMContentLoaded", async function () {
+            // URL 해시(#)에서 카테고리 코드 가져오기 (예: program.html#cooking)
+            const categoryCode = location.hash.replace('#', '');
+            if (!categoryCode) { alert("잘못된 접근입니다."); history.back(); return; }
+
+            // manager.js의 기능을 이용해 배경/제목 설정
+            // 약간의 딜레이를 주어 데이터가 로드된 후 적용
+            setTimeout(() => {
+                if(window.applySubPageHero) window.applySubPageHero();
+            }, 500);
+
+            await loadPosts(categoryCode);
+        });
+
+        // 게시글 목록 불러오기
+        async function loadPosts(category) {
+            const postListEl = document.getElementById('post-list');
+            const loadingEl = document.getElementById('loading');
+
+            try {
+                const { data, error } = await window.sb
+                    .from('total_posts')
+                    .select('*')
+                    .eq('category', category)
+                    .order('order_num', { ascending: true })
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                loadingEl.style.display = 'none';
+                postListEl.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    postListEl.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 60px;"><h3>등록된 게시글이 없습니다.</h3><p>관리자 페이지에서 게시글을 등록해 주세요.</p></div>`;
+                    return;
+                }
+
+                data.forEach(item => {
+                    let displayImg = item.thumbnail_url;
+                    let isVideo = false;
+                    const yId = window.getYoutubeId(item.video_url);
+                    if (yId) {
+                        isVideo = true;
+                        if (!displayImg) displayImg = `https://img.youtube.com/vi/${yId}/hqdefault.jpg`;
+                    }
+                    if (!displayImg) displayImg = NO_IMAGE_URL;
+
+                    // 링크 처리
+                    let clickAction = "";
+                    if (item.link_url) {
+                         clickAction = `onclick="window.open('${item.link_url.startsWith('http') ? item.link_url : 'https://' + item.link_url}', '_blank')"`;
+                    } else {
+                         clickAction = `onclick="location.href='view.html?id=${item.id}'"`;
+                    }
+
+                    const cardHtml = `
+                        <div class="card" ${clickAction} style="cursor:pointer;">
+                            <div class="card-img-wrap">
+                                <img src="${displayImg}" class="card-img" onerror="this.src='${NO_IMAGE_URL}'">
+                                ${isVideo ? '<div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; font-size:3rem; text-shadow:0 0 10px rgba(0,0,0,0.5);">▶</div>' : ''}
+                            </div>
+                            <div class="card-body">
+                                <div class="card-title">${item.title}</div>
+                                <div class="card-text">${item.content ? item.content.replace(/<[^>]*>?/gm, '').substring(0, 50) + '...' : ''}</div>
+                            </div>
+                        </div>
+                    `;
+                    postListEl.insertAdjacentHTML('beforeend', cardHtml);
+                });
+
+            } catch (err) {
+                console.error(err);
+                alert("불러오기 실패");
+            }
+        }
+    </script>
+</body>
+</html>

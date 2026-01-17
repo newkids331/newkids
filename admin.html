@@ -3,176 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>뉴키즈 - 통합 관리자</title>
-    <link rel="stylesheet" href="style.css">
+    <title>뉴키즈 - 통합 관리자 시스템</title>
     <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-    <style>
-        /* 페이지네이션 스타일 */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 5px;
-            margin-top: 30px;
-            margin-bottom: 30px;
-        }
-
-        .page-btn {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            background-color: #fff;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-
-            .page-btn:hover {
-                background-color: #f0f0f0;
-            }
-
-            .page-btn.active {
-                background-color: #1a3c6e;
-                color: white;
-                border-color: #1a3c6e;
-                font-weight: bold;
-            }
-
-            .page-btn:disabled {
-                color: #ccc;
-                cursor: not-allowed;
-            }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="admin.css">
 </head>
 <body>
-    <header></header>
 
     <div id="loading" class="loading-overlay">처리 중입니다...</div>
 
-    <div class="container">
-        <div id="login-section">
-            <h2 style="text-align:center; margin-bottom:30px;">🔒 관리자 로그인</h2>
+    <div id="login-section">
+        <div class="login-box">
+            <h2 style="text-align:center; margin-bottom:30px; color:#1a3c6e;">🔒 관리자 로그인</h2>
             <div class="form-group">
-                <label>아이디 (이메일)</label>
+                <label class="form-label">아이디</label>
                 <input type="email" id="admin-email" class="form-input" placeholder="admin@newkids.com">
             </div>
-            <div class="form-group">
-                <label>비밀번호</label>
-                <input type="password" id="admin-password" class="form-input" placeholder="비밀번호 입력">
+            <div class="form-group" style="margin-top:15px;">
+                <label class="form-label">비밀번호</label>
+                <input type="password" id="admin-password" class="form-input" placeholder="비밀번호">
             </div>
             <div class="btn-center-wrap">
                 <button onclick="adminLogin()" class="btn-action" style="width: 100%;">로그인</button>
             </div>
-        </div>
-
-        <div id="admin-section" style="display:none;">
-            <div class="panel-box">
-                <h2 id="form-title" style="border-bottom:2px solid #1a3c6e; padding-bottom:15px; margin-bottom:20px;">📝 새 글 작성하기</h2>
-                <input type="file" id="hidden-image-input" accept="image/*" multiple style="display:none;">
-
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>카테고리 선택</label>
-                        <select id="post-category" class="form-input">
-                            <optgroup label="행사 프로그램">
-                                <option value="season">🎉 시즌 테마 행사</option>
-                                <option value="culture">🌍 원어민 행사</option>
-                                <option value="performance">👨‍👩‍👧‍👦 부모 참여 행사</option>
-                            </optgroup>
-                            <optgroup label="교육 프로그램 (세분화)">
-                                <option value="korean">🇰🇷 한글</option>
-                                <option value="reading">📖 독서</option>
-                                <option value="english">🔤 영어</option>
-                                <option value="math">🔢 수학</option>
-                                <option value="science">🔬 과학</option>
-                                <option value="art">🎨 미술</option>
-                                <option value="coding">💻 코딩</option>
-                                <option value="environment">🌱 환경</option>
-                                <option value="nuri">👶 누리과정</option>
-                                <option value="infant">🧸 영아</option>
-                                <option value="special">⭐ 기타(특색)</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>순서 (작은 숫자 우선)</label>
-                        <input type="number" id="post-order" class="form-input" value="0">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>제목</label>
-                    <input type="text" id="post-title" class="form-input" placeholder="제목을 입력하세요">
-                </div>
-
-                <div class="form-group">
-                    <label>📌 대표 이미지 (썸네일)</label>
-                    <input type="file" id="post-thumb-file" class="form-input" accept="image/*">
-                    <div id="thumb-manage-area" class="file-manage-area" style="display:none;">
-                        <span id="current-thumb-msg"></span>
-                        <label class="del-label"><input type="checkbox" id="delete-thumb-check"> 기존 사진 삭제</label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>내용</label>
-                    <div id="editor-container"></div>
-                </div>
-
-                <div class="form-group">
-                    <label>상세 이미지/동영상 (선택)</label>
-                    <input type="file" id="post-file" class="form-input" accept="image/*,video/*">
-                    <div id="file-manage-area" class="file-manage-area" style="display:none;">
-                        <span id="current-file-msg"></span>
-                        <label class="del-label"><input type="checkbox" id="delete-file-check"> 기존 파일 삭제</label>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>유튜브 링크</label>
-                    <input type="text" id="youtube-url" class="form-input" placeholder="https://youtu.be/...">
-                </div>
-
-                <div class="form-group">
-                    <label>관련 링크</label>
-                    <input type="text" id="post-link" class="form-input" placeholder="클릭 시 이동할 주소">
-                </div>
-
-                <div class="btn-center-wrap">
-                    <button id="btn-submit" onclick="uploadPost()" class="btn-action" style="min-width: 200px;">업로드 저장</button>
-                    <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn-action" style="display:none; background-color:#666; min-width: 150px;">수정 취소</button>
-                </div>
-            </div>
-
-            <div class="panel-box" style="margin-top: 50px;">
-                <div class="admin-list-header">
-                    <h3>📂 전체 게시글 관리</h3>
-                    <div class="filter-box">
-                        <select id="filter-category" class="form-input" onchange="loadManageList(1)">
-                            <option value="all">전체 보기</option>
-                            <option value="season">🎉 시즌 테마 행사</option>
-                            <option value="culture">🌍 원어민 행사</option>
-                            <option value="performance">👨‍👩‍👧‍👦 부모 참여 행사</option>
-                            <option value="korean">🇰🇷 한글</option>
-                            <option value="reading">📖 독서</option>
-                            <option value="english">🔤 영어</option>
-                            <option value="math">🔢 수학</option>
-                            <option value="science">🔬 과학</option>
-                            <option value="art">🎨 미술</option>
-                            <option value="coding">💻 코딩</option>
-                            <option value="environment">🌱 환경</option>
-                            <option value="nuri">👶 누리과정</option>
-                            <option value="infant">🧸 영아</option>
-                            <option value="special">⭐ 기타(특색)</option>
-                        </select>
-                    </div>
-                </div>
-                <div id="manage-list"></div>
-                <div id="pagination-controls" class="pagination"></div>
-            </div>
+            <p style="text-align:center; margin-top:20px; font-size:0.9rem;">
+                <a href="index.html" style="color:#666;">← 홈페이지로 돌아가기</a>
+            </p>
         </div>
     </div>
 
-    <footer></footer>
+    <div id="admin-layout" class="admin-layout" style="display:none;">
+
+        <nav class="sidebar">
+            <div class="sidebar-logo">🏢 <span>뉴키즈 관리자</span></div>
+
+            <div class="nav-item active" onclick="switchTab('dashboard', this)">
+                📊 <span class="nav-text">대시보드</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('posts', this)">
+                📝 <span class="nav-text">게시글 관리</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('category', this)">
+                🖼️ <span class="nav-text">서브 페이지 관리</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('sheets', this)">
+                📑 <span class="nav-text">신청서 확인</span>
+            </div>
+            <div class="nav-item" onclick="switchTab('settings', this)">
+                ⚙️ <span class="nav-text">환경 설정</span>
+            </div>
+
+            <div class="nav-item logout-btn" onclick="adminLogout()">
+                🚪 <span class="nav-text">로그아웃</span>
+            </div>
+        </nav>
+
+        <main class="main-content">
+
+            <div id="tab-dashboard" class="admin-section active">
+                <h1 style="color:#333; border-bottom:2px solid #ddd; padding-bottom:15px;">관리자 대시보드</h1>
+
+                <div class="dash-grid">
+                    <div class="dash-card" onclick="switchTab('posts', document.querySelectorAll('.nav-item')[1])">
+                        <span class="dash-icon">📝</span>
+                        <div class="dash-title">게시글 작성하기</div>
+                        <p style="font-size:0.9rem; color:#888; margin-top:5px;">교육 및 행사 프로그램 업로드</p>
+                    </div>
+
+                    <div class="dash-card" onclick="switchTab('category', document.querySelectorAll('.nav-item')[2])">
+                        <span class="dash-icon">🖼️</span>
+                        <div class="dash-title">서브 페이지 관리</div>
+                        <p style="font-size:0.9rem; color:#888; margin-top:5px;">메뉴 추가/삭제, 배경 수정</p>
+                    </div>
+
+                    <div class="dash-card" onclick="openSavedSheet()">
+                        <span class="dash-icon">📊</span>
+                        <div class="dash-title">신청서 확인</div>
+                        <p style="font-size:0.9rem; color:#888; margin-top:5px;">구글 시트로 이동 (발주/견적)</p>
+                    </div>
+
+                    <div class="dash-card" onclick="switchTab('settings', document.querySelectorAll('.nav-item')[4])">
+                        <span class="dash-icon">⚙️</span>
+                        <div class="dash-title">환경 설정</div>
+                        <p style="font-size:0.9rem; color:#888; margin-top:5px;">메인 배경, 회사정보, 테마 색상</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-posts" class="admin-section">
+                <div class="panel-box">
+                    <h2 id="form-title" style="border-bottom:2px solid #1a3c6e; padding-bottom:15px; margin-bottom:20px;">📝 게시글 작성/수정</h2>
+                    <input type="file" id="hidden-image-input" accept="image/*" multiple style="display:none;">
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">카테고리</label>
+                            <select id="post-category" class="form-input">
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">정렬 순서</label>
+                            <input type="number" id="post-order" class="form-input" value="0">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">제목</label>
+                        <input type="text" id="post-title" class="form-input" placeholder="제목 입력">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">썸네일 이미지</label>
+                        <input type="file" id="post-thumb-file" class="form-input" accept="image/*">
+                        <div id="thumb-manage-area" style="display:none; margin-top:5px;">
+                            <label><input type="checkbox" id="delete-thumb-check"> 기존 썸네일 삭제</label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">내용 (에디터)</label>
+                        <div id="editor-container" style="background:#fff; height:300px;"></div>
+                    </div>
+
+                    <div class="form-group" style="margin-top:20px;">
+                        <label class="form-label">상세 이미지/동영상 (선택)</label>
+                        <input type="file" id="post-file" class="form-input" accept="image/*,video/*">
+                        <div id="file-manage-area" style="display:none; margin-top:5px;">
+                            <label><input type="checkbox" id="delete-file-check"> 기존 파일 삭제</label>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">유튜브 URL</label>
+                            <input type="text" id="youtube-url" class="form-input" placeholder="https://youtu.be/...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">관련 링크 URL</label>
+                            <input type="text" id="post-link" class="form-input" placeholder="이동할 URL">
+                        </div>
+                    </div>
+
+                    <div class="btn-center-wrap">
+                        <button id="btn-submit" onclick="uploadPost()" class="btn-action" style="min-width: 200px;">업로드 저장</button>
+                        <button id="btn-cancel-edit" onclick="cancelEdit()" class="btn-action" style="display:none; background-color:#666;">취소</button>
+                    </div>
+                </div>
+
+                <div class="panel-box" style="margin-top: 30px;">
+                    <div class="admin-list-header">
+                        <h3 style="margin:0;">📂 등록된 게시글 목록</h3>
+                        <select id="filter-category" class="form-input" style="width:auto;" onchange="loadManageList(1)">
+                        </select>
+                    </div>
+                    <div id="manage-list"></div>
+                    <div id="pagination-controls" class="pagination"></div>
+                </div>
+            </div>
+
+            <div id="tab-category" class="admin-section">
+                <h2 style="border-bottom:2px solid #1a3c6e; padding-bottom:15px;">🖼️ 서브 페이지 관리</h2>
+
+                <div class="panel-box" style="margin-bottom:30px; border:2px dashed #1a3c6e; background:#f0f7ff;">
+                    <h3 style="margin-bottom:15px; color:#1a3c6e;">➕ 새 카테고리(메뉴) 추가</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">코드 (영문소문자, 띄어쓰기X)</label>
+                            <input type="text" id="new-cat-code" class="form-input" placeholder="예: cooking">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">메뉴 이름 (한글)</label>
+                            <input type="text" id="new-cat-name" class="form-input" placeholder="예: 요리 활동">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">유형</label>
+                            <select id="new-cat-type" class="form-input">
+                                <option value="EVENT">행사 프로그램 (program.html)</option>
+                                <option value="EDU">교육 프로그램 (child.html)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="display:flex; align-items:flex-end;">
+                            <button onclick="addNewCategory()" class="btn-action" style="height:50px; margin-bottom:0;">추가하기</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-box">
+                    <p style="color:#666; margin-bottom:20px;">
+                        각 페이지 상단의 <strong>메뉴 이름, 소개 제목/설명, 배경 이미지</strong>를 수정할 수 있습니다.
+                    </p>
+                    <div id="category-list-container">
+                        로딩 중...
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-sheets" class="admin-section">
+                <h2 style="border-bottom:2px solid #1a3c6e; padding-bottom:15px;">📑 신청서 관리</h2>
+                <div class="form-group">
+                    <label class="form-label">🔗 구글 스프레드시트 주소 설정</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="sheet-url-input" class="form-input" placeholder="https://docs.google.com/spreadsheets/d/...">
+                        <button onclick="saveSheetUrl()" class="btn" style="width:100px;">저장</button>
+                    </div>
+                </div>
+                <div class="dash-grid" style="margin-top:40px;">
+                    <div class="dash-card" onclick="openSavedSheet()">
+                        <span class="dash-icon" style="color:#2ecc71;">📊</span>
+                        <div class="dash-title">구글 시트 열기</div>
+                        <p style="font-size:0.9rem; color:#888;">발주/견적 통합 관리 시트</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-settings" class="admin-section">
+                <h2 style="border-bottom:2px solid #1a3c6e; padding-bottom:15px;">⚙️ 환경 설정</h2>
+
+                <div class="panel-box">
+
+                    <h3 class="form-section-title">🏠 메인 페이지(첫 화면) 관리</h3>
+                    <div style="background:#f9f9f9; padding:20px; border-radius:8px; border:1px solid #eee;">
+                        <div class="form-group">
+                            <label class="form-label">메인 큰 제목 (줄바꿈: &lt;br&gt;)</label>
+                            <input type="text" id="conf-main-title" class="form-input" placeholder="예: 우리 원에 필요한 모든 즐거움<br>뉴키즈">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">메인 설명글</label>
+                            <textarea id="conf-main-desc" class="form-input" rows="2" placeholder="예: 검증된 영유아 교재부터..."></textarea>
+                        </div>
+                        <div style="display:flex; gap:20px; align-items:center; margin-top:15px;">
+                            <div style="text-align:center;">
+                                <p style="font-size:0.8rem; margin-bottom:5px; color:#666;">현재 배경</p>
+                                <img id="preview-main-hero" src="" style="height:80px; width:140px; object-fit:cover; border-radius:4px; border:1px solid #ddd; background:#eee;">
+                            </div>
+                            <div style="flex:1;">
+                                <label class="form-label">배경 이미지 변경</label>
+                                <input type="file" id="conf-main-hero" class="form-input" accept="image/*">
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 class="form-section-title" style="margin-top:40px;">🏢 회사 정보 관리 (푸터)</h3>
+                    <div class="form-grid">
+                        <div class="form-group"><label class="form-label">회사명</label><input type="text" id="conf-name" class="form-input"></div>
+                        <div class="form-group"><label class="form-label">대표자명</label><input type="text" id="conf-ceo" class="form-input"></div>
+                    </div>
+                    <div class="form-group"><label class="form-label">주소</label><input type="text" id="conf-addr" class="form-input"></div>
+                    <div class="form-group"><label class="form-label">연락처</label><input type="text" id="conf-phone" class="form-input"></div>
+
+                    <h3 class="form-section-title" style="margin-top:40px;">🎨 디자인 테마 관리</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label class="form-label">메인 컬러</label>
+                            <input type="color" id="conf-primary" class="form-input" style="height:50px;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">강조 컬러</label>
+                            <input type="color" id="conf-accent" class="form-input" style="height:50px;">
+                        </div>
+                    </div>
+
+                    <div class="btn-center-wrap">
+                        <button onclick="saveSiteConfig()" class="btn-action">설정 저장하기</button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
@@ -181,21 +279,18 @@
     <script src="manager.js"></script>
 
     <script>
+        // 전역 변수
         let editingId = null;
         let originalDetailUrl = null;
         let originalThumbUrl = null;
+        let originalMainHero = null;
         let quill;
-        const NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image";
-
-        // [수정] 한 줄에 4개씩 나온다고 가정 (style.css에 따라 다름)
-        // 만약 한 줄에 3개라면 COLS_PER_ROW를 3으로 변경하세요.
-        const COLS_PER_ROW = 4;
-        const ROWS_PER_PAGE = 3; // 3줄(행) 보기
-        const ITEMS_PER_PAGE = COLS_PER_ROW * ROWS_PER_PAGE; // 결과: 12개씩 표시
-
+        const ITEMS_PER_PAGE = 12;
         let currentPage = 1;
 
+        // [초기화]
         document.addEventListener("DOMContentLoaded", async function () {
+            // Quill 에디터 설정
             Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
             quill = new Quill('#editor-container', {
                 theme: 'snow',
@@ -204,223 +299,375 @@
                     toolbar: {
                         container: [
                             [{ 'header': [1, 2, 3, false] }],
-                            ['bold', 'italic', 'underline'],
-                            [{ 'color': [] }, { 'background': [] }],
-                            [{ 'align': [] }],
-                            ['link', 'image', 'video']
+                            ['bold', 'italic', 'underline', { 'color': [] }, { 'background': [] }],
+                            [{ 'align': [] }, 'link', 'image', 'video']
                         ],
-                        handlers: {
-                            image: function () { document.getElementById('hidden-image-input').click(); }
-                        }
+                        handlers: { image: function () { document.getElementById('hidden-image-input').click(); } }
                     }
                 }
             });
 
-            const editorRoot = quill.root;
-            editorRoot.addEventListener('drop', handleDrop, false);
-            editorRoot.addEventListener('dragover', (e) => e.preventDefault(), false);
+            quill.root.addEventListener('drop', handleDrop, false);
+            quill.root.addEventListener('dragover', (e) => e.preventDefault(), false);
+            document.getElementById('hidden-image-input').addEventListener('change', function () { if (this.files.length > 0) uploadAndInsertImages(this.files); });
 
-            document.getElementById('hidden-image-input').addEventListener('change', function () {
-                if (this.files.length > 0) uploadAndInsertImages(this.files);
-            });
+            const savedUrl = localStorage.getItem('mySheetUrl');
+            if (savedUrl) document.getElementById('sheet-url-input').value = savedUrl;
 
             const { data: { session } } = await window.sb.auth.getSession();
-            if (session) showAdminMode();
-            else document.getElementById('login-section').style.display = 'block';
+            if (session) {
+                showAdminMode();
+                loadConfigToForm(); // 환경설정 로드
+                loadAdminCategories(); // 카테고리 로드
+                populateCategorySelects(); // select 박스 로드
+            } else {
+                document.getElementById('login-section').style.display = 'flex';
+            }
         });
 
-        function handleDrop(e) {
-            e.preventDefault();
-            if (e.dataTransfer && e.dataTransfer.files.length > 0) {
-                uploadAndInsertImages(e.dataTransfer.files);
+        // [탭 전환]
+        window.switchTab = function (tabName, navEl) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if (navEl) navEl.classList.add('active');
+            document.querySelectorAll('.admin-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('tab-' + tabName).classList.add('active');
+            if (tabName === 'posts') loadManageList(1);
+        };
+
+        // [환경 설정] 데이터 불러오기
+        async function loadConfigToForm() {
+            const { data, error } = await window.sb.from('site_config').select('*').eq('id', 1).single();
+            if (data) {
+                document.getElementById('conf-name').value = data.company_name || "";
+                document.getElementById('conf-ceo').value = data.ceo_name || "";
+                document.getElementById('conf-addr').value = data.address || "";
+                document.getElementById('conf-phone').value = data.phone || "";
+                document.getElementById('conf-primary').value = data.primary_color || "#1a3c6e";
+                document.getElementById('conf-accent').value = data.accent_color || "#f4a261";
+
+                // 메인 페이지 정보
+                document.getElementById('conf-main-title').value = data.main_hero_title || "";
+                document.getElementById('conf-main-desc').value = data.main_hero_desc || "";
+
+                if (data.main_hero_image) {
+                    document.getElementById('preview-main-hero').src = data.main_hero_image;
+                    originalMainHero = data.main_hero_image;
+                }
             }
         }
 
-        async function uploadAndInsertImages(files) {
+        // [환경 설정] 저장하기
+        window.saveSiteConfig = async function () {
+            if (!confirm("설정을 저장하시겠습니까?\n저장 즉시 홈페이지 전체에 반영됩니다.")) return;
             showLoading(true);
-            const range = quill.getSelection(true);
-            let currentIndex = range ? range.index : quill.getLength();
 
-            for (const file of files) {
-                if (!file.type.startsWith('image/')) continue;
-                try {
-                    const fileName = `content_${Date.now()}_${file.name}`;
-                    const { data, error } = await window.sb.storage.from('images').upload(fileName, file);
-                    if (error) throw error;
-                    const { data: publicData } = window.sb.storage.from('images').getPublicUrl(fileName);
-                    quill.insertEmbed(currentIndex++, 'image', publicData.publicUrl);
-                } catch (err) { alert("업로드 실패: " + err.message); }
+            // 메인 배경 이미지 업로드
+            const mainHeroFile = document.getElementById('conf-main-hero').files[0];
+            let mainHeroUrl = originalMainHero;
+
+            if (mainHeroFile) {
+                const fileName = `main_hero_${Date.now()}`;
+                const { data, error } = await window.sb.storage.from('images').upload(fileName, mainHeroFile);
+                if (!error) {
+                    const { data: urlData } = window.sb.storage.from('images').getPublicUrl(fileName);
+                    mainHeroUrl = urlData.publicUrl;
+                } else {
+                    alert("메인 이미지 업로드 실패: " + error.message);
+                }
             }
+
+            const updateData = {
+                company_name: document.getElementById('conf-name').value,
+                ceo_name: document.getElementById('conf-ceo').value,
+                address: document.getElementById('conf-addr').value,
+                phone: document.getElementById('conf-phone').value,
+                primary_color: document.getElementById('conf-primary').value,
+                accent_color: document.getElementById('conf-accent').value,
+                main_hero_title: document.getElementById('conf-main-title').value,
+                main_hero_desc: document.getElementById('conf-main-desc').value,
+                main_hero_image: mainHeroUrl,
+                updated_at: new Date()
+            };
+
+            const { error } = await window.sb.from('site_config').update(updateData).eq('id', 1);
             showLoading(false);
-            quill.setSelection(currentIndex);
+            if (error) alert("저장 실패: " + error.message);
+            else { alert("설정이 저장되었습니다."); location.reload(); }
+        };
+
+        // [카테고리 관리] 목록 로드
+        async function loadAdminCategories() {
+            const listDiv = document.getElementById('category-list-container');
+            const { data, error } = await window.sb.from('program_categories').select('*').order('type').order('order_num');
+
+            if (!data) { listDiv.innerHTML = "데이터 없음"; return; }
+
+            let html = '<div style="display:grid; gap:15px;">';
+            data.forEach(cat => {
+                const imgDisplay = cat.hero_image ? `<img src="${cat.hero_image}" style="height:60px; width:100px; object-fit:cover; border-radius:4px; border:1px solid #ddd;">` : '<div style="height:60px; width:100px; background:#eee; display:flex; align-items:center; justify-content:center; border-radius:4px; font-size:0.8rem; color:#888;">이미지 없음</div>';
+
+                html += `
+                    <div style="background:#fff; padding:20px; border-radius:8px; display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; border:1px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                        <div style="flex:1; min-width:200px;">
+                            <span class="category-badge" style="background:${cat.type === 'EDU' ? '#1a3c6e' : '#f4a261'}">${cat.type === 'EDU' ? '교육' : '행사'}</span>
+                            <h4 style="margin:5px 0;">${cat.name} <span style="font-weight:normal; color:#888; font-size:0.8rem;">(${cat.code})</span></h4>
+
+                            <label style="font-size:0.8rem; color:#666; margin-top:5px; display:block;">메뉴 이름</label>
+                            <input type="text" id="cat-name-${cat.code}" value="${cat.name}" class="form-input" style="width:100%;">
+
+                            <label style="font-size:0.8rem; color:#666; margin-top:5px; display:block;">페이지 상단 제목</label>
+                            <input type="text" id="cat-title-${cat.code}" value="${cat.hero_title || ''}" class="form-input" style="width:100%;" placeholder="예: 한글 프로그램">
+
+                            <label style="font-size:0.8rem; color:#666; margin-top:5px; display:block;">페이지 상단 설명</label>
+                            <textarea id="cat-desc-${cat.code}" class="form-input" rows="2" style="width:100%;">${cat.hero_desc || ''}</textarea>
+                        </div>
+                        <div style="text-align:center;">
+                            <p style="font-size:0.8rem; margin-bottom:5px; color:#666;">배경 이미지 미리보기</p>
+                            ${imgDisplay}
+                        </div>
+                        <div style="flex:1; min-width:200px;">
+                            <label class="form-label" style="font-size:0.8rem;">배경 이미지 변경</label>
+                            <input type="file" id="cat-file-${cat.code}" class="form-input" accept="image/*">
+                        </div>
+                        <div style="align-self:center; display:flex; flex-direction:column; gap:5px;">
+                            <button onclick="updateCategory('${cat.code}')" class="btn-mini" style="background:#1a3c6e; color:white; border:none; padding:10px 20px;">저장</button>
+                            <button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:white; border-color:#ff6b6b;">삭제</button>
+                        </div>
+                    </div>`;
+            });
+            html += '</div>';
+            listDiv.innerHTML = html;
         }
 
-        async function adminLogin() {
-            const email = document.getElementById('admin-email').value;
-            const password = document.getElementById('admin-password').value;
+        // [카테고리 관리] 추가
+        async function addNewCategory() {
+            const code = document.getElementById('new-cat-code').value.trim().toLowerCase();
+            const name = document.getElementById('new-cat-name').value.trim();
+            const type = document.getElementById('new-cat-type').value;
+
+            if (!code || !name) return alert("코드와 이름은 필수입니다.");
+            if (/[^a-z0-9]/.test(code)) return alert("코드는 영문 소문자와 숫자만 가능합니다.");
+
+            if (!confirm(`[${name}] 카테고리를 추가하시겠습니까?`)) return;
+
             showLoading(true);
-            const { error } = await window.sb.auth.signInWithPassword({ email, password });
+            const { error } = await window.sb.from('program_categories').insert([{
+                code: code,
+                name: name,
+                type: type,
+                hero_title: name,
+                hero_desc: "새로운 프로그램입니다.",
+                order_num: 99
+            }]);
+
             showLoading(false);
-            if (error) alert("로그인 실패: " + error.message);
-            else showAdminMode();
+            if (error) alert("추가 실패(중복된 코드일 수 있습니다): " + error.message);
+            else {
+                alert("추가되었습니다.");
+                document.getElementById('new-cat-code').value = '';
+                document.getElementById('new-cat-name').value = '';
+                loadAdminCategories();
+                populateCategorySelects();
+            }
         }
 
-        function showAdminMode() {
-            document.getElementById('login-section').style.display = 'none';
-            document.getElementById('admin-section').style.display = 'block';
-            loadManageList(1);
+        // [카테고리 관리] 삭제
+        async function deleteCategory(code) {
+            const userInput = prompt(`삭제하려면 [${code}]를 입력하세요.\n(주의: 해당 카테고리의 게시글은 삭제되지 않지만 화면에 안 보일 수 있습니다.)`);
+            if (userInput !== code) return alert("코드가 일치하지 않아 취소합니다.");
+
+            showLoading(true);
+            const { error } = await window.sb.from('program_categories').delete().eq('code', code);
+            showLoading(false);
+
+            if (error) alert("삭제 실패: " + error.message);
+            else {
+                alert("삭제되었습니다.");
+                loadAdminCategories();
+                populateCategorySelects();
+            }
         }
 
+        // [카테고리 관리] 수정 내용 저장
+        async function updateCategory(code) {
+            if (!confirm("저장하시겠습니까?")) return;
+            showLoading(true);
+
+            const newName = document.getElementById(`cat-name-${code}`).value;
+            const newTitle = document.getElementById(`cat-title-${code}`).value;
+            const newDesc = document.getElementById(`cat-desc-${code}`).value;
+            const fileInput = document.getElementById(`cat-file-${code}`);
+
+            let newImageUrl = null;
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileName = `hero_${code}_${Date.now()}`;
+                const { data, error } = await window.sb.storage.from('images').upload(fileName, file);
+                if (error) { alert("업로드 실패: " + error.message); showLoading(false); return; }
+                const { data: urlData } = window.sb.storage.from('images').getPublicUrl(fileName);
+                newImageUrl = urlData.publicUrl;
+            }
+
+            const updateData = {
+                name: newName,
+                hero_title: newTitle,
+                hero_desc: newDesc
+            };
+            if (newImageUrl) updateData.hero_image = newImageUrl;
+
+            const { error } = await window.sb.from('program_categories').update(updateData).eq('code', code);
+            showLoading(false);
+            if (error) alert("저장 실패: " + error.message);
+            else {
+                alert("저장되었습니다.");
+                loadAdminCategories();
+                populateCategorySelects();
+            }
+        }
+
+        // [게시글] 카테고리 셀렉트 채우기
+        async function populateCategorySelects() {
+            const { data } = await window.sb.from('program_categories').select('*').order('type').order('order_num');
+            if (!data) return;
+
+            const postSelect = document.getElementById('post-category');
+            const filterSelect = document.getElementById('filter-category');
+
+            let eduOpts = '<optgroup label="교육 프로그램">';
+            let evtOpts = '<optgroup label="행사 프로그램">';
+
+            data.forEach(c => {
+                const opt = `<option value="${c.code}">${c.name}</option>`;
+                if (c.type === 'EDU') eduOpts += opt; else evtOpts += opt;
+            });
+
+            eduOpts += '</optgroup>';
+            evtOpts += '</optgroup>';
+
+            postSelect.innerHTML = evtOpts + eduOpts;
+            filterSelect.innerHTML = '<option value="all">전체 보기</option>' + evtOpts + eduOpts;
+        }
+
+
+        // [기본 기능] 구글 시트, 로그인 등
+        window.openSpreadSheet = function () { openSavedSheet(); };
+        window.saveSheetUrl = function () { const url = document.getElementById('sheet-url-input').value; if (!url) return alert("주소를 입력해주세요."); localStorage.setItem('mySheetUrl', url); alert("저장되었습니다."); };
+        window.openSavedSheet = function () { const url = localStorage.getItem('mySheetUrl'); if (url) window.open(url, '_blank'); else { alert("설정 탭에서 구글 시트 주소를 먼저 저장해주세요."); switchTab('sheets', document.querySelectorAll('.nav-item')[3]); } };
+
+        window.adminLogin = async function () {
+            const e = document.getElementById('admin-email').value, p = document.getElementById('admin-password').value;
+            showLoading(true);
+            const { error } = await window.sb.auth.signInWithPassword({ email: e, password: p });
+            showLoading(false);
+            if (error) alert(error.message);
+            else { showAdminMode(); loadConfigToForm(); loadAdminCategories(); populateCategorySelects(); }
+        };
+        window.adminLogout = async function () { await window.sb.auth.signOut(); location.reload(); };
+
+        function showAdminMode() { document.getElementById('login-section').style.display = 'none'; document.getElementById('admin-layout').style.display = 'flex'; loadManageList(1); }
         function showLoading(show) { document.getElementById('loading').style.display = show ? 'flex' : 'none'; }
 
+        // [게시글 관리 로직]
         async function loadManageList(page = 1) {
             currentPage = page;
             const cat = document.getElementById('filter-category').value;
-            const listDiv = document.getElementById('manage-list');
-            const paginationDiv = document.getElementById('pagination-controls');
-
-            // 페이지네이션 범위 계산
             const from = (page - 1) * ITEMS_PER_PAGE;
-            const to = from + ITEMS_PER_PAGE - 1;
+            let q = window.sb.from('total_posts').select('*', { count: 'exact' });
+            if (cat !== 'all') q = q.eq('category', cat);
 
-            let query = window.sb.from('total_posts').select('*', { count: 'exact' });
-            if (cat !== 'all') query = query.eq('category', cat);
+            const { data, count } = await q.order('order_num', { ascending: true }).order('created_at', { ascending: false }).range(from, from + ITEMS_PER_PAGE - 1);
 
-            // 데이터 조회
-            const { data, count, error } = await query
-                .order('order_num', { ascending: true })
-                .order('created_at', { ascending: false })
-                .range(from, to);
+            const list = document.getElementById('manage-list');
+            list.innerHTML = "";
+            if (!data || data.length === 0) { list.innerHTML = "<p style='grid-column:1/-1;text-align:center;'>글이 없습니다.</p>"; return; }
 
-            listDiv.innerHTML = "";
-            paginationDiv.innerHTML = "";
-
-            if (error) {
-                listDiv.innerHTML = `<div style='text-align:center;'>에러 발생: ${error.message}</div>`;
-                return;
-            }
-
-            if (!data || data.length === 0) {
-                listDiv.innerHTML = "<div style='text-align:center; padding:30px;'>글이 없습니다.</div>";
-                return;
-            }
-
-            // 게시물 렌더링
             data.forEach(item => {
-                const thumb = item.thumbnail_url || NO_IMAGE_URL;
-                const card = document.createElement('div');
-                card.className = 'post-card';
-                card.onclick = () => location.href = `view.html?id=${item.id}`;
-                card.innerHTML = `
-                            <div class="post-thumb"><img src="${thumb}" style="width:100%; height:100%; object-fit:cover;"></div>
-                            <div class="post-info">
-                                <span class="category-badge">${item.category}</span>
-                                <h4 class="card-title">${item.title}</h4>
-                                <div class="card-text">순서: ${item.order_num || 0}</div>
-                            </div>
-                            <div class="post-actions">
-                                <button onclick='event.stopPropagation(); editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="btn-mini edit">수정</button>
-                                <button onclick='event.stopPropagation(); deletePost(${item.id})' class="btn-mini del">삭제</button>
-                            </div>`;
-                listDiv.appendChild(card);
+                const thumb = item.thumbnail_url || "https://placehold.co/400x300?text=No+Image";
+                list.innerHTML += `
+                    <div class="post-card">
+                        <div class="post-thumb" style="height:150px;">
+                            <img src="${thumb}" style="width:100%;height:100%;object-fit:cover;">
+                        </div>
+                        <div class="post-info" style="padding:15px;">
+                            <span class="category-badge">${item.category}</span>
+                            <h4 style="font-size:1rem; margin:5px 0;">${item.title}</h4>
+                        </div>
+                        <div class="post-actions">
+                            <button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="btn-mini">수정</button>
+                            <button onclick='deletePost(${item.id})' class="btn-mini" style="color:red;">삭제</button>
+                        </div>
+                    </div>`;
             });
-
-            // 페이지네이션 UI
             renderPagination(count, currentPage);
         }
 
-        function renderPagination(totalCount, currentPage) {
-            const paginationDiv = document.getElementById('pagination-controls');
-            const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+        function renderPagination(t, c) {
+            const p = document.getElementById('pagination-controls'); p.innerHTML = "";
+            const tp = Math.ceil(t / ITEMS_PER_PAGE);
+            if (tp <= 1) return;
 
-            if (totalPages <= 1) return;
+            const createBtn = (txt, pg, act) => `<button class="page-btn ${act ? 'active' : ''}" onclick="loadManageList(${pg})">${txt}</button>`;
 
-            const prevBtn = document.createElement('button');
-            prevBtn.innerText = "이전";
-            prevBtn.className = "page-btn";
-            prevBtn.disabled = currentPage === 1;
-            prevBtn.onclick = () => loadManageList(currentPage - 1);
-            paginationDiv.appendChild(prevBtn);
-
-            for (let i = 1; i <= totalPages; i++) {
-                const btn = document.createElement('button');
-                btn.innerText = i;
-                btn.className = `page-btn ${i === currentPage ? 'active' : ''}`;
-                btn.onclick = () => loadManageList(i);
-                paginationDiv.appendChild(btn);
-            }
-
-            const nextBtn = document.createElement('button');
-            nextBtn.innerText = "다음";
-            nextBtn.className = "page-btn";
-            nextBtn.disabled = currentPage === totalPages;
-            nextBtn.onclick = () => loadManageList(currentPage + 1);
-            paginationDiv.appendChild(nextBtn);
+            if (c > 1) p.innerHTML += createBtn("이전", c - 1, false);
+            for (let i = 1; i <= tp; i++)p.innerHTML += createBtn(i, i, i === c);
+            if (c < tp) p.innerHTML += createBtn("다음", c + 1, false);
         }
 
-        window.editPost = function (item) {
-            editingId = item.id;
-            originalDetailUrl = item.image_url;
-            originalThumbUrl = item.thumbnail_url;
-            document.getElementById('post-category').value = item.category;
-            document.getElementById('post-title').value = item.title;
-            quill.root.innerHTML = item.content || "";
-            document.getElementById('youtube-url').value = item.video_url || "";
-            document.getElementById('post-link').value = item.link_url || "";
-            document.getElementById('post-order').value = item.order_num || 0;
+        // 이미지 업로드 핸들러
+        function handleDrop(e) { e.preventDefault(); if (e.dataTransfer.files.length > 0) uploadAndInsertImages(e.dataTransfer.files); }
+        async function uploadAndInsertImages(files) {
+            showLoading(true);
+            const r = quill.getSelection(true);
+            let idx = r ? r.index : quill.getLength();
+            for (const f of files) {
+                if (!f.type.startsWith('image/')) continue;
+                const n = `c_${Date.now()}_${f.name}`;
+                await window.sb.storage.from('images').upload(n, f);
+                const { data } = window.sb.storage.from('images').getPublicUrl(n);
+                quill.insertEmbed(idx++, 'image', data.publicUrl);
+            }
+            showLoading(false);
+        }
 
-            document.getElementById('thumb-manage-area').style.display = item.thumbnail_url ? "block" : "none";
-            document.getElementById('file-manage-area').style.display = item.image_url ? "block" : "none";
-            document.getElementById('delete-thumb-check').checked = false;
-            document.getElementById('delete-file-check').checked = false;
+        async function uploadPost() {
+            const ti = document.getElementById('post-title').value;
+            if (!ti) return alert("제목을 입력해주세요.");
+            showLoading(true);
 
-            document.getElementById('form-title').innerText = "✏️ 수정 중...";
+            const cat = document.getElementById('post-category').value;
+
+            let tu = document.getElementById('delete-thumb-check').checked ? null : originalThumbUrl;
+            let du = document.getElementById('delete-file-check').checked ? null : originalDetailUrl;
+
+            const tf = document.getElementById('post-thumb-file').files[0];
+            const df = document.getElementById('post-file').files[0];
+
+            if (tf) { const { data } = await window.sb.storage.from('images').upload(`t_${Date.now()}`, tf); tu = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; }
+            if (df) { const { data } = await window.sb.storage.from('images').upload(`d_${Date.now()}`, df); du = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl; }
+
+            const pd = { title: ti, content: quill.root.innerHTML, category: cat, order_num: parseInt(document.getElementById('post-order').value) || 0, video_url: document.getElementById('youtube-url').value, link_url: document.getElementById('post-link').value, thumbnail_url: tu, image_url: du };
+            const { error } = editingId ? await window.sb.from('total_posts').update(pd).eq('id', editingId) : await window.sb.from('total_posts').insert([pd]);
+
+            showLoading(false);
+            if (error) alert(error.message);
+            else { alert("저장되었습니다."); cancelEdit(); loadManageList(currentPage); }
+        }
+
+        window.editPost = function (i) {
+            editingId = i.id; originalDetailUrl = i.image_url; originalThumbUrl = i.thumbnail_url;
+            document.getElementById('post-category').value = i.category;
+            document.getElementById('post-title').value = i.title;
+            quill.root.innerHTML = i.content || "";
+            document.getElementById('youtube-url').value = i.video_url || "";
+            document.getElementById('post-link').value = i.link_url || "";
+            document.getElementById('post-order').value = i.order_num || 0;
+            document.getElementById('thumb-manage-area').style.display = i.thumbnail_url ? "block" : "none";
+            document.getElementById('file-manage-area').style.display = i.image_url ? "block" : "none";
+            document.getElementById('form-title').innerText = "✏️ 수정 모드";
             document.getElementById('btn-submit').innerText = "수정 완료";
             document.getElementById('btn-cancel-edit').style.display = "inline-block";
             window.scrollTo({ top: 0, behavior: 'smooth' });
         };
-
-        async function uploadPost() {
-            const title = document.getElementById('post-title').value;
-            if (!title) return alert("제목 필수");
-            showLoading(true);
-
-            let thumbUrl = document.getElementById('delete-thumb-check').checked ? null : originalThumbUrl;
-            let detailUrl = document.getElementById('delete-file-check').checked ? null : originalDetailUrl;
-
-            const tFile = document.getElementById('post-thumb-file').files[0];
-            const dFile = document.getElementById('post-file').files[0];
-
-            if (tFile) {
-                const { data } = await window.sb.storage.from('images').upload(`t_${Date.now()}`, tFile);
-                if (data) thumbUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-            }
-            if (dFile) {
-                const { data } = await window.sb.storage.from('images').upload(`d_${Date.now()}`, dFile);
-                if (data) detailUrl = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
-            }
-
-            const postData = {
-                title, content: quill.root.innerHTML,
-                category: document.getElementById('post-category').value,
-                order_num: parseInt(document.getElementById('post-order').value) || 0,
-                video_url: document.getElementById('youtube-url').value,
-                link_url: document.getElementById('post-link').value,
-                thumbnail_url: thumbUrl, image_url: detailUrl
-            };
-
-            const { error } = editingId ? await window.sb.from('total_posts').update(postData).eq('id', editingId) : await window.sb.from('total_posts').insert([postData]);
-            showLoading(false);
-
-            if (error) {
-                alert(error.message);
-            } else {
-                alert("저장됨");
-                cancelEdit();
-                loadManageList(currentPage); // 현재 페이지 새로고침
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-        }
 
         window.cancelEdit = function () {
             editingId = null;
@@ -429,13 +676,13 @@
             document.querySelectorAll('input[type="file"]').forEach(i => i.value = "");
             document.getElementById('thumb-manage-area').style.display = "none";
             document.getElementById('file-manage-area').style.display = "none";
-            document.getElementById('form-title').innerText = "📝 새 글 작성하기";
+            document.getElementById('form-title').innerText = "📝 게시글 작성/수정";
             document.getElementById('btn-submit').innerText = "업로드 저장";
             document.getElementById('btn-cancel-edit').style.display = "none";
         };
 
         window.deletePost = async function (id) {
-            if (confirm("삭제?")) {
+            if (confirm("정말 삭제하시겠습니까?")) {
                 await window.sb.from('total_posts').delete().eq('id', id);
                 loadManageList(currentPage);
             }
