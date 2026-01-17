@@ -74,7 +74,7 @@
                     <div class="dash-card" onclick="switchTab('category', document.querySelectorAll('.nav-item')[2])">
                         <span class="dash-icon">🖼️</span>
                         <div class="dash-title">서브 페이지 관리</div>
-                        <p style="font-size:0.9rem; color:#888; margin-top:5px;">카테고리 이름 및 상단 이미지 변경</p>
+                        <p style="font-size:0.9rem; color:#888; margin-top:5px;">메뉴 추가/삭제, 배경 수정</p>
                     </div>
 
                     <div class="dash-card" onclick="openSavedSheet()">
@@ -104,7 +104,7 @@
                             </select>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">정렬 순서</label>
+                            <label class="form-label">정렬 순서 (숫자)</label>
                             <input type="number" id="post-order" class="form-input" value="0">
                         </div>
                     </div>
@@ -292,7 +292,6 @@
 
         // [초기화]
         document.addEventListener("DOMContentLoaded", async function () {
-            // Quill 에디터
             Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
             quill = new Quill('#editor-container', {
                 theme: 'snow',
@@ -313,21 +312,53 @@
             quill.root.addEventListener('dragover', (e) => e.preventDefault(), false);
             document.getElementById('hidden-image-input').addEventListener('change', function () { if (this.files.length > 0) uploadAndInsertImages(this.files); });
 
-            // 시트 URL 로드
             const savedUrl = localStorage.getItem('mySheetUrl');
             if (savedUrl) document.getElementById('sheet-url-input').value = savedUrl;
 
-            // 로그인 세션 확인
             const { data: { session } } = await window.sb.auth.getSession();
             if (session) {
                 showAdminMode();
-                loadConfigToForm(); // 환경설정 로드
-                loadAdminCategories(); // 카테고리 로드
-                populateCategorySelects(); // select 박스 로드
+                loadConfigToForm(); // 환경설정
+                loadAdminCategories(); // 카테고리 관리
+                populateCategorySelects(); // 작성폼 카테고리 목록
             } else {
                 document.getElementById('login-section').style.display = 'flex';
             }
         });
+
+        // [핵심 수정] 게시글 작성 폼의 카테고리 목록 생성 (교육/행사 확실한 분리)
+        async function populateCategorySelects() {
+            const { data } = await window.sb.from('program_categories').select('*').order('order_num');
+            if (!data) return;
+
+            const postSelect = document.getElementById('post-category');
+            const filterSelect = document.getElementById('filter-category');
+
+            let eduHtml = '';
+            let eventHtml = '';
+
+            data.forEach(c => {
+                const opt = `<option value="${c.code}">${c.name}</option>`;
+                if (c.type === 'EDU') {
+                    eduHtml += opt;
+                } else {
+                    eventHtml += opt;
+                }
+            });
+
+            // 확실하게 optgroup을 닫아서 결합
+            const finalHtml = `
+                    <optgroup label="행사 프로그램">
+                        ${eventHtml}
+                    </optgroup>
+                    <optgroup label="교육 프로그램">
+                        ${eduHtml}
+                    </optgroup>
+                `;
+
+            postSelect.innerHTML = finalHtml;
+            filterSelect.innerHTML = `<option value="all">전체 보기</option>${finalHtml}`;
+        }
 
         // [탭 전환]
         window.switchTab = function (tabName, navEl) {
@@ -351,7 +382,6 @@
                 document.getElementById('conf-primary').value = data.primary_color || "#1a3c6e";
                 document.getElementById('conf-accent').value = data.accent_color || "#f4a261";
 
-                // 메인 페이지 정보
                 document.getElementById('conf-main-title').value = data.main_hero_title || "";
                 document.getElementById('conf-main-desc').value = data.main_hero_desc || "";
 
@@ -364,10 +394,9 @@
 
         // [환경 설정] 저장하기
         window.saveSiteConfig = async function () {
-            if (!confirm("설정을 저장하시겠습니까?\n저장 즉시 홈페이지 전체에 반영됩니다.")) return;
+            if (!confirm("설정을 저장하시겠습니까?")) return;
             showLoading(true);
 
-            // 메인 배경 이미지 업로드
             const mainHeroFile = document.getElementById('conf-main-hero').files[0];
             let mainHeroUrl = originalMainHero;
 
@@ -404,16 +433,15 @@
         // [카테고리 관리] 목록 로드
         async function loadAdminCategories() {
             const listDiv = document.getElementById('category-list-container');
-            const { data, error } = await window.sb.from('program_categories').select('*').order('type').order('order_num');
-
+            const { data } = await window.sb.from('program_categories').select('*').order('type').order('order_num');
             if (!data) { listDiv.innerHTML = "데이터 없음"; return; }
 
             let html = '<div style="display:grid; gap:15px;">';
             data.forEach(cat => {
-                const imgDisplay = cat.hero_image ? `<img src="${cat.hero_image}" style="height:60px; width:100px; object-fit:cover; border-radius:4px; border:1px solid #ddd;">` : '<div style="height:60px; width:100px; background:#eee; display:flex; align-items:center; justify-content:center; border-radius:4px; font-size:0.8rem; color:#888;">이미지 없음</div>';
+                const imgDisplay = cat.hero_image ? `<img src="${cat.hero_image}" style="height:60px; width:100px; object-fit:cover; border-radius:4px;">` : '<div style="height:60px; width:100px; background:#eee; display:flex; align-items:center; justify-content:center; color:#888; font-size:0.8rem;">없음</div>';
 
                 html += `
-                    <div style="background:#fff; padding:20px; border-radius:8px; display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; border:1px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.02);">
+                    <div style="background:#fff; padding:20px; border-radius:8px; display:flex; gap:20px; align-items:flex-start; flex-wrap:wrap; border:1px solid #eee;">
                         <div style="flex:1; min-width:200px;">
                             <span class="category-badge" style="background:${cat.type === 'EDU' ? '#1a3c6e' : '#f4a261'}">${cat.type === 'EDU' ? '교육' : '행사'}</span>
                             <h4 style="margin:5px 0;">${cat.name} <span style="font-weight:normal; color:#888; font-size:0.8rem;">(${cat.code})</span></h4>
@@ -422,13 +450,13 @@
                             <input type="text" id="cat-name-${cat.code}" value="${cat.name}" class="form-input" style="width:100%;">
 
                             <label style="font-size:0.8rem; color:#666; margin-top:5px; display:block;">페이지 상단 제목</label>
-                            <input type="text" id="cat-title-${cat.code}" value="${cat.hero_title || ''}" class="form-input" style="width:100%;" placeholder="예: 한글 프로그램">
+                            <input type="text" id="cat-title-${cat.code}" value="${cat.hero_title || ''}" class="form-input" style="width:100%;">
 
                             <label style="font-size:0.8rem; color:#666; margin-top:5px; display:block;">페이지 상단 설명</label>
                             <textarea id="cat-desc-${cat.code}" class="form-input" rows="2" style="width:100%;">${cat.hero_desc || ''}</textarea>
                         </div>
                         <div style="text-align:center;">
-                            <p style="font-size:0.8rem; margin-bottom:5px; color:#666;">배경 이미지 미리보기</p>
+                            <p style="font-size:0.8rem; margin-bottom:5px;">배경 이미지</p>
                             ${imgDisplay}
                         </div>
                         <div style="flex:1; min-width:200px;">
@@ -436,7 +464,7 @@
                             <input type="file" id="cat-file-${cat.code}" class="form-input" accept="image/*">
                         </div>
                         <div style="align-self:center; display:flex; flex-direction:column; gap:5px;">
-                            <button onclick="updateCategory('${cat.code}')" class="btn-mini" style="background:#1a3c6e; color:white; border:none; padding:10px 20px;">저장</button>
+                            <button onclick="updateCategory('${cat.code}')" class="btn-mini" style="background:#1a3c6e; color:white;">저장</button>
                             <button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:white; border-color:#ff6b6b;">삭제</button>
                         </div>
                     </div>`;
@@ -530,30 +558,6 @@
                 populateCategorySelects();
             }
         }
-
-        // [게시글] 카테고리 셀렉트 채우기
-        async function populateCategorySelects() {
-            const { data } = await window.sb.from('program_categories').select('*').order('type').order('order_num');
-            if (!data) return;
-
-            const postSelect = document.getElementById('post-category');
-            const filterSelect = document.getElementById('filter-category');
-
-            let eduOpts = '<optgroup label="교육 프로그램">';
-            let evtOpts = '<optgroup label="행사 프로그램">';
-
-            data.forEach(c => {
-                const opt = `<option value="${c.code}">${c.name}</option>`;
-                if (c.type === 'EDU') eduOpts += opt; else evtOpts += opt;
-            });
-
-            eduOpts += '</optgroup>';
-            evtOpts += '</optgroup>';
-
-            postSelect.innerHTML = evtOpts + eduOpts;
-            filterSelect.innerHTML = '<option value="all">전체 보기</option>' + evtOpts + eduOpts;
-        }
-
 
         // [기본 기능] 구글 시트, 로그인 등
         window.openSpreadSheet = function () { openSavedSheet(); };

@@ -71,282 +71,234 @@
     <script src="manager.js"></script>
 
     <script>
-        // 1. 카테고리 설정
-        const TARGET_CATEGORIES = [
-            'korean', 'reading', 'english', 'math', 'science', 'art',
-            'coding', 'environment', 'nuri', 'infant', 'special'
-        ];
-        const CATEGORY_NAMES = {
-            'korean': '🇰🇷 한글', 'reading': '📖 독서', 'english': '🔤 영어',
-            'math': '🔢 수학', 'science': '🔬 과학', 'art': '🎨 미술',
-            'coding': '💻 코딩', 'environment': '🌱 환경', 'nuri': '👶 누리과정',
-            'infant': '🧸 영아', 'special': '⭐ 기타(특색)'
-        };
+        let CATEGORY_NAMES = {};
 
         function escapeHtml(text) {
             if (!text) return "";
             return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
-        // 2. 초기화 (로딩 대기)
         document.addEventListener("DOMContentLoaded", function () {
-            let attempts = 0;
+            // manager.js 로드 대기
             const checkSb = setInterval(() => {
-                attempts++;
                 if (window.sb) {
                     clearInterval(checkSb);
-                    loadOrderProducts(window.sb);
-                } else if (attempts > 50) {
-                    clearInterval(checkSb);
-                    document.getElementById('loading-msg').innerHTML = "<span style='color:red;'>서버 연결 실패. 페이지를 새로고침 해주세요.</span>";
+                    loadDynamicOrderProducts(window.sb);
                 }
             }, 100);
 
-            // [추가] 전화번호 자동 하이픈 (-) 기능
+            // 전화번호 하이픈
             const phoneInput = document.querySelector('input[name="phone"]');
             if (phoneInput) {
                 phoneInput.addEventListener('input', function (e) {
-                    let number = e.target.value.replace(/[^0-9]/g, ""); // 숫자만 남김
+                    let number = e.target.value.replace(/[^0-9]/g, "");
                     let tel = "";
-
-                    // 서울(02) 지역번호 처리
                     if (number.startsWith('02')) {
-                        if (number.length < 3) { tel = number; }
-                        else if (number.length < 6) { tel = number.substr(0, 2) + "-" + number.substr(2); }
-                        else if (number.length < 10) { tel = number.substr(0, 2) + "-" + number.substr(2, 3) + "-" + number.substr(5); }
-                        else { tel = number.substr(0, 2) + "-" + number.substr(2, 4) + "-" + number.substr(6); }
+                        if (number.length < 3) { tel = number; } else if (number.length < 6) { tel = number.substr(0, 2) + "-" + number.substr(2); } else { tel = number.substr(0, 2) + "-" + number.substr(2, 4) + "-" + number.substr(6); }
                     } else {
-                        // 그 외 (010, 031 등)
-                        if (number.length < 4) { tel = number; }
-                        else if (number.length < 7) { tel = number.substr(0, 3) + "-" + number.substr(3); }
-                        else if (number.length < 11) { tel = number.substr(0, 3) + "-" + number.substr(3, 3) + "-" + number.substr(6); }
-                        else { tel = number.substr(0, 3) + "-" + number.substr(3, 4) + "-" + number.substr(7); }
+                        if (number.length < 4) { tel = number; } else if (number.length < 7) { tel = number.substr(0, 3) + "-" + number.substr(3); } else { tel = number.substr(0, 3) + "-" + number.substr(3, 4) + "-" + number.substr(7); }
                     }
                     e.target.value = tel;
                 });
             }
         });
 
-        // 3. 상품 데이터 로드
-        async function loadOrderProducts(sb) {
+        // [핵심] DB에서 '교육' 카테고리와 상품만 불러오기
+        async function loadDynamicOrderProducts(sb) {
             try {
-                const { data, error } = await sb.from('total_posts')
+                // 1. 교육(EDU) 카테고리만 가져오기
+                const { data: catData, error: catError } = await sb
+                    .from('program_categories')
                     .select('*')
-                    .in('category', TARGET_CATEGORIES)
-                    .order('category', { ascending: true })
+                    .eq('type', 'EDU')
+                    .eq('is_visible', true)
+                    .order('order_num');
+
+                if (catError || !catData) throw new Error("카테고리 로드 실패");
+
+                const eduCodes = [];
+                catData.forEach(c => {
+                    CATEGORY_NAMES[c.code] = c.name;
+                    eduCodes.push(c.code);
+                });
+
+                // 2. 해당 카테고리의 상품(게시글) 가져오기
+                const { data: posts, error: postError } = await sb.from('total_posts')
+                    .select('*')
+                    .in('category', eduCodes)
                     .order('order_num', { ascending: true });
 
                 const listArea = document.getElementById('product-list-area');
                 document.getElementById('loading-msg').style.display = 'none';
 
-                if (error || !data || data.length === 0) {
+                if (postError || !posts || posts.length === 0) {
                     listArea.innerHTML = `<div style="grid-column: 1/-1; padding:40px; text-align:center; color:#888;">주문 가능한 상품이 없습니다.</div>`;
                     return;
                 }
 
-                const groupedData = data.reduce((acc, item) => {
-                    const cat = item.category || 'etc';
-                    (acc[cat] = acc[cat] || []).push(item);
+                // 3. 그룹화
+                const groupedData = posts.reduce((acc, item) => {
+                    const c = item.category || 'etc';
+                    (acc[c] = acc[c] || []).push(item);
                     return acc;
                 }, {});
 
+                // 4. HTML 생성 (빈 카테고리도 표시하여 확인 가능하게 함)
                 let html = "";
-                TARGET_CATEGORIES.forEach(cat => {
-                    if (groupedData[cat] && groupedData[cat].length > 0) {
-                        html += `<div class="category-wrapper">`;
-                        html += `<div class="order-category-header" onclick="toggleCategory(this)">
-                                        <span>${CATEGORY_NAMES[cat] || cat}</span>
+                eduCodes.forEach(code => {
+                    const items = groupedData[code] || [];
+                    const hasItems = items.length > 0;
+
+                    html += `<div class="category-wrapper">
+                                    <div class="order-category-header" onclick="toggleCategory(this)">
+                                        <span>${CATEGORY_NAMES[code] || code}</span>
                                         <span class="toggle-icon">▼</span>
-                                     </div>`;
-                        html += `<div class="order-category-content">`;
-                        groupedData[cat].forEach(item => {
-                            const safeTitle = escapeHtml(item.title || "제목 없음");
-                            html += `
-                                    <div class="order-item-row" data-title="${safeTitle}" onclick="toggleProductItem(this)">
-                                        <div class="order-item-info">
-                                            <h4>${safeTitle}</h4>
-                                            <span class="check-indicator">✔</span>
-                                        </div>
-                                        <div class="dynamic-qty-container" onclick="event.stopPropagation()">
-                                            ${generateDynamicInputArea()}
-                                        </div>
-                                    </div>`;
+                                    </div>
+                                    <div class="order-category-content">`;
+
+                    if (hasItems) {
+                        items.forEach(item => {
+                            const safeTitle = escapeHtml(item.title);
+                            html += `<div class="order-item-row" data-title="${safeTitle}" onclick="toggleProductItem(this)">
+                                            <div class="order-item-info">
+                                                <h4>${safeTitle}</h4>
+                                                <span class="check-indicator">✔</span>
+                                            </div>
+                                            <div class="dynamic-qty-container" onclick="event.stopPropagation()">
+                                                ${generateDynamicInputArea()}
+                                            </div>
+                                         </div>`;
                         });
-                        html += `</div></div>`;
+                    } else {
+                        html += `<div style="padding:15px; text-align:center; color:#999; font-size:0.9rem;">상품 준비 중입니다.</div>`;
                     }
+                    html += `</div></div>`;
                 });
                 listArea.innerHTML = html;
+
             } catch (e) {
                 console.error(e);
+                document.getElementById('loading-msg').innerText = "데이터 로드 중 오류가 발생했습니다.";
             }
         }
-
-        // 4. [기능] 카테고리 헤더 상태 업데이트
-        function updateCategoryHeaderState(element) {
-            const wrapper = element.closest('.category-wrapper');
-            if (!wrapper) return;
-            const header = wrapper.querySelector('.order-category-header');
-
-            const allInputs = wrapper.querySelectorAll('.dynamic-qty-input');
-            let totalQty = 0;
-            allInputs.forEach(input => {
-                if (input.value) totalQty += parseInt(input.value);
-            });
-
-            if (totalQty > 0) header.classList.add('has-data');
-            else header.classList.remove('has-data');
-        }
-
-        // 5. 토글 로직
-        window.toggleCategory = function (header) {
-            if (window.event) window.event.stopPropagation();
-            const wrapper = header.closest('.category-wrapper');
-            const isAlreadyActive = wrapper.classList.contains('active');
-
-            document.querySelectorAll('.category-wrapper').forEach(w => {
-                w.classList.remove('active');
-                const content = w.querySelector('.order-category-content');
-                if (content) content.classList.remove('show');
-            });
-
-            if (!isAlreadyActive) {
-                wrapper.classList.add('active');
-                const content = wrapper.querySelector('.order-category-content');
-                if (content) content.classList.add('show');
-            }
-        };
-
-        window.toggleProductItem = function (row) {
-            if (window.event) window.event.stopPropagation();
-            const isAlreadyActive = row.classList.contains('active');
-            const parent = row.closest('.order-category-content');
-            if (parent) {
-                parent.querySelectorAll('.order-item-row.active').forEach(r => r.classList.remove('active'));
-            }
-            if (!isAlreadyActive) row.classList.add('active');
-        };
-
-        document.addEventListener('click', function (e) {
-            if (!e.target.closest('.category-wrapper')) {
-                document.querySelectorAll('.category-wrapper').forEach(w => {
-                    w.classList.remove('active');
-                    const content = w.querySelector('.order-category-content');
-                    if (content) content.classList.remove('show');
-                });
-            }
-        });
-
-        // 6. 데이터 감지 및 상태 업데이트
-        window.checkRowData = function (el) {
-            const row = el.closest('.order-item-row');
-            if (!row) return;
-
-            const inputs = row.querySelectorAll('.dynamic-qty-input');
-            let hasValue = false;
-            inputs.forEach(input => {
-                if (input.value && parseInt(input.value) > 0) hasValue = true;
-            });
-
-            if (hasValue) row.classList.add('has-data');
-            else row.classList.remove('has-data');
-
-            updateCategoryHeaderState(el);
-        };
 
         function generateDynamicInputArea() {
-            return `
-                    <div class="qty-rows-wrapper">
-                        <div class="qty-row">
-                            <select class="age-select">
-                                <option value="1">1세</option><option value="2">2세</option><option value="3">3세</option>
-                                <option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option>
-                            </select>
-                            <input type="number" min="0" class="dynamic-qty-input" placeholder="수량" oninput="checkRowData(this)">
+            return `<div class="qty-rows-wrapper">
+                            <div class="qty-row">
+                                <select class="age-select">
+                                    <option value="1">1세</option><option value="2">2세</option><option value="3">3세</option>
+                                    <option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option>
+                                </select>
+                                <input type="number" min="0" class="dynamic-qty-input" placeholder="수량" oninput="checkRowData(this)">
+                            </div>
                         </div>
-                    </div>
-                    <button type="button" class="btn-add-row" onclick="addQtyRow(this)">+ 연령 추가하기</button>
-                `;
+                        <button type="button" class="btn-add-row" onclick="addQtyRow(this)">+ 연령 추가하기</button>`;
         }
 
-        window.addQtyRow = function (btn) {
-            const wrapper = btn.previousElementSibling;
-            const newRow = document.createElement('div');
-            newRow.className = 'qty-row';
-            newRow.innerHTML = `<select class="age-select"><option value="1">1세</option><option value="2">2세</option><option value="3">3세</option><option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option></select><input type="number" min="0" class="dynamic-qty-input" placeholder="수량" oninput="checkRowData(this)"><button type="button" class="btn-remove-row" onclick="removeQtyRow(this)">×</button>`;
-            wrapper.appendChild(newRow);
+        // [아코디언 토글] 하나만 열리기
+        window.toggleCategory = function (h) {
+            if (window.event) window.event.stopPropagation();
+            const w = h.closest('.category-wrapper');
+            const isActive = w.classList.contains('active');
+
+            // 1. 모두 닫기
+            document.querySelectorAll('.category-wrapper').forEach(cw => {
+                cw.classList.remove('active');
+                cw.querySelector('.order-category-content').classList.remove('show');
+            });
+
+            // 2. 선택한 것 열기
+            if (!isActive) {
+                w.classList.add('active');
+                w.querySelector('.order-category-content').classList.add('show');
+            }
         };
 
-        window.removeQtyRow = function (btn) {
-            const row = btn.closest('.order-item-row');
-            const wrapper = btn.closest('.category-wrapper');
-            btn.parentElement.remove();
+        window.toggleProductItem = function (r) {
+            if (window.event) window.event.stopPropagation();
+            const active = r.classList.contains('active');
+            const p = r.closest('.order-category-content');
+            // 같은 그룹 내 다른 아이템 닫기
+            p.querySelectorAll('.order-item-row.active').forEach(row => row.classList.remove('active'));
+            if (!active) r.classList.add('active');
+        };
 
-            if (row) {
-                const inputs = row.querySelectorAll('.dynamic-qty-input');
-                if (inputs.length > 0) checkRowData(inputs[0]);
-                else {
-                    row.classList.remove('has-data');
-                    if (wrapper) {
-                        const header = wrapper.querySelector('.order-category-header');
-                        const remaining = wrapper.querySelectorAll('.dynamic-qty-input');
-                        let total = 0;
-                        remaining.forEach(i => { if (i.value) total += parseInt(i.value); });
-                        if (total > 0) header.classList.add('has-data');
-                        else header.classList.remove('has-data');
-                    }
+        window.checkRowData = function (el) {
+            const r = el.closest('.order-item-row');
+            const inputs = r.querySelectorAll('.dynamic-qty-input');
+            let has = false; inputs.forEach(i => { if (i.value > 0) has = true; });
+            if (has) r.classList.add('has-data'); else r.classList.remove('has-data');
+
+            const w = r.closest('.category-wrapper');
+            const h = w.querySelector('.order-category-header');
+            const all = w.querySelectorAll('.dynamic-qty-input');
+            let t = 0; all.forEach(i => { if (i.value) t += parseInt(i.value) });
+            if (t > 0) h.classList.add('has-data'); else h.classList.remove('has-data');
+        };
+
+        window.addQtyRow = function (b) {
+            const w = b.previousElementSibling;
+            const d = document.createElement('div'); d.className = 'qty-row';
+            d.innerHTML = `<select class="age-select"><option value="1">1세</option><option value="2">2세</option><option value="3">3세</option><option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option></select><input type="number" min="0" class="dynamic-qty-input" placeholder="수량" oninput="checkRowData(this)"><button type="button" class="btn-remove-row" onclick="removeQtyRow(this)">×</button>`;
+            w.appendChild(d);
+        };
+
+        window.removeQtyRow = function (b) {
+            const row = b.closest('.order-item-row');
+            b.parentElement.remove();
+            const i = row.querySelectorAll('.dynamic-qty-input');
+            if (i.length > 0) checkRowData(i[0]); else {
+                row.classList.remove('has-data');
+                const w = row.closest('.category-wrapper');
+                if (w) {
+                    const h = w.querySelector('.order-category-header');
+                    const all = w.querySelectorAll('.dynamic-qty-input');
+                    let t = 0; all.forEach(v => { if (v.value) t += parseInt(v.value) });
+                    if (t > 0) h.classList.add('has-data'); else h.classList.remove('has-data');
                 }
             }
         };
 
-        // 7. 제출 로직
         const form = document.getElementById('orderForm');
         if (form) {
             form.addEventListener('submit', function (e) {
                 e.preventDefault();
                 const btn = form.querySelector('.btn-action');
-                const originalText = btn.innerText;
-                const orderDetails = [];
-                document.querySelectorAll('.order-item-row').forEach(row => {
-                    const title = row.getAttribute('data-title');
-                    const rows = row.querySelectorAll('.qty-row');
-                    let hasQty = false;
-                    let ageStr = [];
-                    rows.forEach(qtyRow => {
-                        const age = qtyRow.querySelector('.age-select').value;
-                        const qty = parseInt(qtyRow.querySelector('.dynamic-qty-input').value);
-                        if (qty > 0) { hasQty = true; ageStr.push(`${age}세(${qty}권)`); }
+                const orig = btn.innerText;
+                const details = [];
+                document.querySelectorAll('.order-item-row').forEach(r => {
+                    const t = r.getAttribute('data-title');
+                    const rows = r.querySelectorAll('.qty-row');
+                    let sub = [];
+                    rows.forEach(qr => {
+                        const a = qr.querySelector('.age-select').value;
+                        const q = parseInt(qr.querySelector('.dynamic-qty-input').value);
+                        if (q > 0) sub.push(`${a}세(${q}권)`);
                     });
-                    if (hasQty) orderDetails.push(`[${title}] : ${ageStr.join(', ')}`);
+                    if (sub.length > 0) details.push(`[${t}] : ${sub.join(', ')}`);
                 });
 
-                if (orderDetails.length === 0) {
-                    alert("수량을 입력한 교재가 없습니다.");
-                    return;
-                }
+                if (details.length === 0) return alert("주문할 교재를 선택해주세요.");
 
                 btn.disabled = true; btn.innerText = "전송 중...";
-                const formData = new FormData(form);
-                const data = {
+                const fd = new FormData(form);
+                const d = {
                     type: "ORDER",
-                    wonName: formData.get("wonName"),
-                    manager: formData.get("manager"),
-                    phone: formData.get("phone"),
-                    email: formData.get("email"),
-                    deliveryDate: formData.get("deliveryDate") || "미지정",
-                    orderDetails: orderDetails.join("\n"),
-                    remarks: formData.get("remarks"),
+                    wonName: fd.get("wonName"),
+                    manager: fd.get("manager"),
+                    phone: fd.get("phone"),
+                    email: fd.get("email"),
+                    deliveryDate: fd.get("deliveryDate") || "미지정",
+                    orderDetails: details.join("\n"),
+                    remarks: fd.get("remarks"),
                     timestamp: new Date().toLocaleString()
                 };
 
-                fetch(CONFIG.ORDER_SHEET_URL, { method: "POST", body: JSON.stringify(data) })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.result === 'success') { alert("발주 요청 성공!"); window.location.reload(); }
-                        else { throw new Error(res.error); }
-                    })
-                    .catch(err => {
-                        console.error(err); alert("전송 실패"); btn.disabled = false; btn.innerText = originalText;
-                    });
+                fetch(CONFIG.ORDER_SHEET_URL, { method: "POST", body: JSON.stringify(d) })
+                    .then(r => r.json()).then(r => {
+                        if (r.result === 'success') { alert("발주 요청이 완료되었습니다!"); location.reload(); }
+                        else throw new Error(r.error);
+                    }).catch(e => { alert("전송 실패: " + e); btn.disabled = false; btn.innerText = orig; });
             });
         }
     </script>
