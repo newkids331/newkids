@@ -3,10 +3,10 @@
     // 배포한 스크립트 주소를 아래에 각각 넣어주세요. (같은 주소를 써도 됩니다)
 
     // ① 교재 발주용 (order.html에서 사용)
-    ORDER_SHEET_URL: "https://script.google.com/macros/s/AKfycby_NbJIjiV9JQ_weDcdzcmFpcX9eD5xyas1qKxAbY2wqRjf_y1TvBX58ksUNjpRE_4ipQ/exec",
+    ORDER_SHEET_URL: "https://script.google.com/macros/s/AKfycbx4rQRtKIKtays9oWz2UbJY9OWtQAULvVyaa9Sb3Mr8Dh6hiSdfkIbFKAZWQpJxGXAi/exec",
 
     // ② 제안서/견적용 (proposal.html에서 사용)
-    PROPOSAL_SHEET_URL: "https://script.google.com/macros/s/AKfycby_NbJIjiV9JQ_weDcdzcmFpcX9eD5xyas1qKxAbY2wqRjf_y1TvBX58ksUNjpRE_4ipQ/exec",
+    PROPOSAL_SHEET_URL: "https://script.google.com/macros/s/AKfycbx4rQRtKIKtays9oWz2UbJY9OWtQAULvVyaa9Sb3Mr8Dh6hiSdfkIbFKAZWQpJxGXAi/exec",
 
     // [2] Supabase 설정
     SUPABASE_URL: "https://jmdyqdckclgfyimqpqce.supabase.co",
