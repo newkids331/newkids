@@ -19,7 +19,7 @@
     </section>
 
     <section>
-        <div class="container">
+        <div class="container-wide">
             <div class="view-box">
                 <div class="view-header">
                     <h2 class="view-title" id="post-title">로딩 중...</h2>
@@ -27,6 +27,7 @@
                 </div>
 
                 <div class="view-media" id="view-media" style="display:none;"></div>
+
                 <div class="view-content ql-editor" id="post-content"></div>
 
                 <div id="link-container" style="text-align: center; margin: 40px 0 20px;"></div>
@@ -56,7 +57,6 @@
         async function loadPostDetail(id) {
             document.getElementById('loading').style.display = 'flex';
             try {
-                // link_url 컬럼도 같이 가져오기
                 const { data, error } = await window.sb.from('total_posts').select('*').eq('id', id).single();
                 if (error || !data) throw new Error("데이터 없음");
 
@@ -85,9 +85,9 @@
                     mediaBox.style.display = 'none';
                 }
 
-                // [NEW] 링크 버튼 처리 로직
+                // [링크 버튼 처리]
                 const linkBox = document.getElementById('link-container');
-                linkBox.innerHTML = ""; // 초기화
+                linkBox.innerHTML = "";
 
                 if (data.link_url && data.link_url.trim() !== "" && data.link_url !== "null") {
                     let finalLink = data.link_url;
@@ -95,13 +95,12 @@
                         finalLink = 'https://' + finalLink;
                     }
                     linkBox.innerHTML = `
-                            <a href="${finalLink}" target="_blank" class="link-btn-style">
-                                🔗 관련 사이트 바로가기
-                            </a>
-                        `;
+                                <a href="${finalLink}" target="_blank" class="link-btn-style">
+                                    🔗 관련 사이트 바로가기
+                                </a>
+                            `;
                 }
 
-                // 배경 업데이트
                 updateHeroBackground(data.category);
 
             } catch (err) {
@@ -112,28 +111,15 @@
             finally { document.getElementById('loading').style.display = 'none'; }
         }
 
-        // [배경 이미지 처리 함수]
         function updateHeroBackground(category) {
             const hero = document.getElementById('view-hero');
-
             const catMap = {
-                'season': 'bg-season',
-                'culture': 'bg-culture',
-                'performance': 'bg-performance',
-                'korean': 'bg-child',
-                'reading': 'bg-child',
-                'english': 'bg-child',
-                'math': 'bg-child',
-                'science': 'bg-child',
-                'art': 'bg-child',
-                'coding': 'bg-child',
-                'environment': 'bg-child',
-                'nuri': 'bg-child',
-                'infant': 'bg-child',
-                'special': 'bg-child'
+                'season': 'bg-season', 'culture': 'bg-culture', 'performance': 'bg-performance',
+                'korean': 'bg-child', 'reading': 'bg-child', 'english': 'bg-child',
+                'math': 'bg-child', 'science': 'bg-child', 'art': 'bg-child',
+                'coding': 'bg-child', 'environment': 'bg-child', 'nuri': 'bg-child',
+                'infant': 'bg-child', 'special': 'bg-child'
             };
-
-            // 해당 카테고리가 없으면 회색 배경(bg-gray) 처리
             hero.className = 'sub-hero ' + (catMap[category] || 'bg-gray');
         }
     </script>
