@@ -52,6 +52,16 @@ async function loadSiteConfig() {
                 if (data.main_hero_image) {
                     mainHero.style.backgroundImage = `linear-gradient(rgba(26,60,110,0.4), rgba(26,60,110,0.4)), url('${data.main_hero_image}')`;
                 }
+
+                // [수정] 메인 텍스트 색상 적용
+                if (data.main_hero_text_color) {
+                    mainHero.style.color = data.main_hero_text_color;
+                    const h1 = mainHero.querySelector('h1');
+                    const p = mainHero.querySelector('p');
+                    if (h1) h1.style.color = data.main_hero_text_color;
+                    if (p) p.style.color = data.main_hero_text_color;
+                }
+
                 const titleEl = mainHero.querySelector('h1');
                 const descEl = mainHero.querySelector('p');
                 if (titleEl && data.main_hero_title) titleEl.innerHTML = data.main_hero_title;
@@ -106,6 +116,16 @@ function applySubPageHero() {
             hero.style.backgroundSize = 'cover';
             hero.style.backgroundPosition = 'center';
         }
+
+        // [수정] 서브 페이지 텍스트 색상 적용
+        if (category.hero_text_color) {
+            hero.style.color = category.hero_text_color;
+            const h1 = hero.querySelector('h1');
+            const p = hero.querySelector('p');
+            if (h1) h1.style.color = category.hero_text_color;
+            if (p) p.style.color = category.hero_text_color;
+        }
+
         const titleEl = hero.querySelector('h1');
         const descEl = hero.querySelector('p');
         if (titleEl && category.hero_title) titleEl.innerHTML = category.hero_title;
@@ -117,11 +137,21 @@ window.updateHeroBackground = function (categoryCode) {
     const hero = document.getElementById('view-hero');
     if (!hero) return;
     const category = window.GLOBAL_CATEGORIES.find(c => c.code === categoryCode);
-    if (category && category.hero_image) {
-        hero.style.backgroundImage = `linear-gradient(rgba(26,60,110,0.8), rgba(26,60,110,0.8)), url('${category.hero_image}')`;
-        hero.className = 'sub-hero';
-        hero.style.backgroundSize = 'cover';
-        hero.style.backgroundPosition = 'center';
+    if (category) {
+        if (category.hero_image) {
+            hero.style.backgroundImage = `linear-gradient(rgba(26,60,110,0.8), rgba(26,60,110,0.8)), url('${category.hero_image}')`;
+            hero.className = 'sub-hero';
+            hero.style.backgroundSize = 'cover';
+            hero.style.backgroundPosition = 'center';
+        }
+        // [수정] 상세 페이지에서도 색상 적용
+        if (category.hero_text_color) {
+            hero.style.color = category.hero_text_color;
+            const h1 = hero.querySelector('h1');
+            const p = hero.querySelector('p');
+            if (h1) h1.style.color = category.hero_text_color;
+            if (p) p.style.color = category.hero_text_color;
+        }
     } else {
         hero.className = 'sub-hero bg-gray';
         hero.style.backgroundImage = 'none';
