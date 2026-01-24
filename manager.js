@@ -1,8 +1,8 @@
-﻿// manager.js - 뉴키즈 홈페이지 통합 관리자 (v3.0 Final)
+﻿// manager.js - 뉴키즈 홈페이지 통합 관리자 (v3.3 - 로딩 순서 최적화)
 
 window.GLOBAL_CATEGORIES = [];
 
-// [안전장치] DB 연결 전 즉시 보여줄 기본 메뉴
+// [안전장치] DB 연결 실패 시에만 사용할 기본 메뉴
 const DEFAULT_CATEGORIES = [
     { code: 'korean', name: '🇰🇷 한글', type: 'EDU' },
     { code: 'reading', name: '📖 독서', type: 'EDU' },
@@ -21,20 +21,44 @@ const DEFAULT_CATEGORIES = [
 ];
 
 (function initSystem() {
+    // 1. [핵심 수정] 라이브러리가 이미 로드되었다면 '즉시' 실행 (지연 없음)
     if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
-        window.sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
-            auth: { persistSession: true, storage: window.sessionStorage }
-        });
-        loadSiteConfig();
-        loadCategories();
+        startSupabase();
     } else {
-        window.GLOBAL_CATEGORIES = DEFAULT_CATEGORIES;
-        loadHeader();
+        // 2. 만약 라이브러리가 늦게 로드되면 그때만 기다림
+        let attempts = 0;
+        const waitForSupabase = setInterval(() => {
+            if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
+                clearInterval(waitForSupabase);
+                startSupabase();
+            } else {
+                attempts++;
+                if (attempts > 50) { // 5초 초과 시 중단
+                    clearInterval(waitForSupabase);
+                    console.error("Supabase 로드 실패");
+                    // 강제로 화면이라도 보여줌
+                    document.querySelectorAll('.hero, .sub-hero').forEach(el => el.classList.add('loaded'));
+                }
+            }
+        }, 50);
     }
 })();
 
+function startSupabase() {
+    // DB 연결 객체 생성
+    window.sb = supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY, {
+        auth: { persistSession: true, storage: window.sessionStorage }
+    });
+
+    // 설정 및 카테고리 로드 시작
+    loadSiteConfig();
+    loadCategories();
+}
+
 async function loadSiteConfig() {
     if (!window.sb) return;
+    const mainHero = document.querySelector('.hero');
+
     try {
         const { data } = await window.sb.from('site_config').select('*').eq('id', 1).single();
         if (data) {
@@ -47,13 +71,12 @@ async function loadSiteConfig() {
             if (data.primary_color) root.style.setProperty('--primary-color', data.primary_color);
             if (data.accent_color) root.style.setProperty('--accent-color', data.accent_color);
 
-            const mainHero = document.querySelector('.hero');
             if (mainHero) {
                 if (data.main_hero_image) {
                     mainHero.style.backgroundImage = `linear-gradient(rgba(26,60,110,0.4), rgba(26,60,110,0.4)), url('${data.main_hero_image}')`;
                 }
 
-                // [수정] 메인 텍스트 색상 적용
+                // [색상 적용]
                 if (data.main_hero_text_color) {
                     mainHero.style.color = data.main_hero_text_color;
                     const h1 = mainHero.querySelector('h1');
@@ -70,14 +93,14 @@ async function loadSiteConfig() {
             loadFooter();
         }
     } catch (e) { console.error("설정 로드 실패:", e); }
+
+    // [핵심] 로딩 완료 후 화면 표시
+    if (mainHero) mainHero.classList.add('loaded');
 }
 
 async function loadCategories() {
-    if (!window.sb) {
-        window.GLOBAL_CATEGORIES = DEFAULT_CATEGORIES;
-        loadHeader();
-        return;
-    }
+    if (!window.sb) return;
+
     try {
         const { data } = await window.sb.from('program_categories')
             .select('*').eq('is_visible', true).order('order_num', { ascending: true });
@@ -90,6 +113,7 @@ async function loadCategories() {
     } catch (e) {
         window.GLOBAL_CATEGORIES = DEFAULT_CATEGORIES;
     }
+
     loadHeader();
     applySubPageHero();
 }
@@ -104,7 +128,7 @@ function applySubPageHero() {
     } else if (location.pathname.includes('program.html')) {
         currentCode = location.hash.replace('#', '');
     } else if (location.pathname.includes('view.html')) {
-        return;
+        // 상세 페이지는 view.html 내부 로직 따름
     } else {
         currentCode = location.pathname.split('/').pop().replace('.html', '');
     }
@@ -117,7 +141,7 @@ function applySubPageHero() {
             hero.style.backgroundPosition = 'center';
         }
 
-        // [수정] 서브 페이지 텍스트 색상 적용
+        // [색상 적용]
         if (category.hero_text_color) {
             hero.style.color = category.hero_text_color;
             const h1 = hero.querySelector('h1');
@@ -131,6 +155,9 @@ function applySubPageHero() {
         if (titleEl && category.hero_title) titleEl.innerHTML = category.hero_title;
         if (descEl && category.hero_desc) descEl.innerHTML = category.hero_desc;
     }
+
+    // [핵심] 로딩 완료 후 화면 표시 (서브페이지)
+    hero.classList.add('loaded');
 }
 
 window.updateHeroBackground = function (categoryCode) {
@@ -144,7 +171,8 @@ window.updateHeroBackground = function (categoryCode) {
             hero.style.backgroundSize = 'cover';
             hero.style.backgroundPosition = 'center';
         }
-        // [수정] 상세 페이지에서도 색상 적용
+
+        // [색상 적용]
         if (category.hero_text_color) {
             hero.style.color = category.hero_text_color;
             const h1 = hero.querySelector('h1');
@@ -156,13 +184,20 @@ window.updateHeroBackground = function (categoryCode) {
         hero.className = 'sub-hero bg-gray';
         hero.style.backgroundImage = 'none';
     }
+
+    // [핵심] 상세 페이지 로딩 완료
+    hero.classList.add('loaded');
 };
 
 function loadHeader() {
     const headerEl = document.querySelector('header');
     if (!headerEl) return;
 
-    const categories = (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0) ? window.GLOBAL_CATEGORIES : DEFAULT_CATEGORIES;
+    // 데이터가 없으면 기본값이라도 사용 (메뉴 렌더링 보장)
+    const categories = (window.GLOBAL_CATEGORIES && window.GLOBAL_CATEGORIES.length > 0)
+        ? window.GLOBAL_CATEGORIES
+        : DEFAULT_CATEGORIES;
+
     const legacyFiles = ['season', 'culture', 'performance'];
 
     const eduMenuHtml = categories.filter(c => c.type === 'EDU')
@@ -207,38 +242,24 @@ document.addEventListener("DOMContentLoaded", function () {
     window.addEventListener('hashchange', () => { if (location.pathname.includes('child.html') || location.pathname.includes('program.html')) applySubPageHero(); });
 });
 
-/* =========================================
-[추가] 모바일 헤더 메뉴 제어 스크립트
-========================================= */
+/* 모바일 메뉴 */
 document.addEventListener("DOMContentLoaded", function () {
     const mobileBtn = document.querySelector('.mobile-btn');
     const navMenu = document.querySelector('.nav-menu');
-
-    // 1. 햄버거 버튼(☰) 클릭 시 메뉴 열기/닫기 토글
     if (mobileBtn && navMenu) {
         mobileBtn.addEventListener('click', function (e) {
-            e.stopPropagation(); // 이벤트 버블링 방지
-            navMenu.classList.toggle('active');
+            e.stopPropagation(); navMenu.classList.toggle('active');
         });
     }
-
-    // 2. [핵심] 메뉴 내부의 링크를 클릭하면 메뉴창 닫기
     const menuLinks = document.querySelectorAll('.nav-menu a');
     menuLinks.forEach(link => {
         link.addEventListener('click', () => {
-            if (navMenu.classList.contains('active')) {
-                navMenu.classList.remove('active'); // 메뉴 닫기
-            }
+            if (navMenu.classList.contains('active')) navMenu.classList.remove('active');
         });
     });
-
-    // 3. (옵션) 메뉴 영역 바깥(본문)을 클릭해도 메뉴 닫기
     document.addEventListener('click', function (e) {
         if (navMenu && navMenu.classList.contains('active')) {
-            // 클릭한 요소가 메뉴도 아니고, 햄버거 버튼도 아니라면 닫기
-            if (!navMenu.contains(e.target) && !mobileBtn.contains(e.target)) {
-                navMenu.classList.remove('active');
-            }
+            if (!navMenu.contains(e.target) && !mobileBtn.contains(e.target)) navMenu.classList.remove('active');
         }
     });
 });

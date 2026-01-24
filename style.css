@@ -181,7 +181,7 @@ header {
     align-items: center;
     height: 100%;
     max-width: 1800px;
-    margin: 0 auto 0 -10px;
+    margin: 0 auto 0 -20px;
     padding: 0 20px;
 }
 
@@ -1446,5 +1446,43 @@ header {
     border: 1px solid #eee;
     border-radius: 15px;
     box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-
 }
+
+/* =========================================
+   [추가] 데이터 로딩 전 깜빡임 방지 (FOUC)
+   ========================================= */
+
+/* 1. 메인(.hero) 및 서브(.sub-hero) 배너 기본 상태: 숨김 */
+/* .loaded 클래스가 없을 때는 배경과 글자를 숨깁니다 */
+.hero:not(.loaded),
+.sub-hero:not(.loaded) {
+    background-image: none !important; /* 기본 배경 숨김 */
+    background-color: #f4f6f9; /* 로딩 중에 보여줄 연한 회색 */
+    transition: background-image 0.3s ease-in-out, background-color 0.3s ease;
+}
+
+    /* 2. 텍스트 숨김 (제목, 설명글, 버튼) */
+    .hero:not(.loaded) h1,
+    .hero:not(.loaded) p,
+    .hero:not(.loaded) a,
+    .sub-hero:not(.loaded) h1,
+    .sub-hero:not(.loaded) p {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease-in-out;
+    }
+
+/* 3. 로딩 완료 상태 (JS가 .loaded 클래스를 추가하면 보임) */
+.hero.loaded,
+.sub-hero.loaded {
+    /* 원래 배경 이미지 표시 (JS가 style로 넣어줌) */
+}
+
+    .hero.loaded h1,
+    .hero.loaded p,
+    .hero.loaded a,
+    .sub-hero.loaded h1,
+    .sub-hero.loaded p {
+        opacity: 1;
+        visibility: visible;
+    }
