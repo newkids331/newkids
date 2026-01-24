@@ -20,7 +20,7 @@
         <div class="container">
             <form id="orderForm" class="proposal-box">
                 <h3 class="form-section-title">👤 주문자 정보</h3>
-                
+
                 <div class="form-grid">
                     <div class="form-group">
                         <label class="form-label">원명 (필수)</label>
@@ -118,13 +118,20 @@
                     eduCodes.push(c.code);
                 });
 
+                // ★ 핵심 수정: video_url이 'ORDER_'로 시작하는 항목(ORDER_ITEM 또는 ORDER_ALL)을 모두 가져옴
                 const { data: posts, error: postError } = await sb.from('total_posts')
                     .select('*')
                     .in('category', eduCodes)
+                    .like('video_url', 'ORDER_%') // [필터 수정] 발주용과 통합용 모두 포함
                     .order('order_num', { ascending: true });
 
                 document.getElementById('loading-msg').style.display = 'none';
                 const listArea = document.getElementById('product-list-area');
+
+                if (!posts || posts.length === 0) {
+                    listArea.innerHTML = `<div style="text-align:center; padding:30px; color:#999;">등록된 발주 상품이 없습니다.<br>관리자 페이지에서 상품을 등록해주세요.</div>`;
+                    return;
+                }
 
                 const groupedData = (posts || []).reduce((acc, item) => {
                     const c = item.category || 'etc';
@@ -137,24 +144,24 @@
                     const items = groupedData[code] || [];
 
                     html += `<div class="category-wrapper">
-                                    <div class="order-category-header" onclick="toggleCategory(this)">
-                                        <span>${CATEGORY_NAMES[code] || code}</span>
-                                        <span class="toggle-icon">▼</span>
-                                    </div>
-                                    <div class="order-category-content">`;
+                                        <div class="order-category-header" onclick="toggleCategory(this)">
+                                            <span>${CATEGORY_NAMES[code] || code}</span>
+                                            <span class="toggle-icon">▼</span>
+                                        </div>
+                                        <div class="order-category-content">`;
 
                     if (items.length > 0) {
                         items.forEach(item => {
                             const safeTitle = escapeHtml(item.title);
                             html += `<div class="order-item-row" data-title="${safeTitle}" onclick="toggleProductItem(this)">
-                                            <div class="order-item-info">
-                                                <h4>${safeTitle}</h4>
-                                                <span class="check-indicator">✔</span>
-                                            </div>
-                                            <div class="dynamic-qty-container" onclick="event.stopPropagation()">
-                                                ${generateDynamicInputArea()}
-                                            </div>
-                                         </div>`;
+                                                <div class="order-item-info">
+                                                    <h4>${safeTitle}</h4>
+                                                    <span class="check-indicator">✔</span>
+                                                </div>
+                                                <div class="dynamic-qty-container" onclick="event.stopPropagation()">
+                                                    ${generateDynamicInputArea()}
+                                                </div>
+                                             </div>`;
                         });
                     } else {
                         html += `<div style="padding:15px; text-align:center; color:#999; font-size:0.9rem;">상품 준비 중입니다.</div>`;
@@ -171,15 +178,15 @@
 
         function generateDynamicInputArea() {
             return `<div class="qty-rows-wrapper">
-                            <div class="qty-row">
-                                <select class="age-select">
-                                    <option value="1">1세</option><option value="2">2세</option><option value="3">3세</option>
-                                    <option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option>
-                                </select>
-                                <input type="number" min="0" class="dynamic-qty-input" placeholder="수량" oninput="checkRowData(this)">
+                                <div class="qty-row">
+                                    <select class="age-select">
+                                        <option value="1">1세</option><option value="2">2세</option><option value="3">3세</option>
+                                        <option value="4">4세</option><option value="5">5세</option><option value="6">6세</option><option value="7">7세</option>
+                                    </select>
+                                    <input type="number" min="0" class="dynamic-qty-input" placeholder="수량" oninput="checkRowData(this)">
+                                </div>
                             </div>
-                        </div>
-                        <button type="button" class="btn-add-row" onclick="addQtyRow(this)">+ 연령 추가하기</button>`;
+                            <button type="button" class="btn-add-row" onclick="addQtyRow(this)">+ 연령 추가하기</button>`;
         }
 
         window.toggleCategory = function (h) {
@@ -282,7 +289,7 @@
                     phone: fd.get("phone"),
                     email: fd.get("email"),
                     region: fd.get("region"),
-                    deliveryDate: "미지정", 
+                    deliveryDate: "미지정",
                     orderDetails: details.join("\n"),
                     remarks: fd.get("remarks"),
                     timestamp: new Date().toLocaleString()

@@ -31,6 +31,7 @@
 
     <script>
         const NO_IMAGE_URL = "https://placehold.co/400x300/e0e0e0/666666?text=No+Image";
+
         document.addEventListener("DOMContentLoaded", function () {
             loadCategoryPosts();
             window.addEventListener('hashchange', loadCategoryPosts);
@@ -45,28 +46,34 @@
             postListEl.innerHTML = '';
 
             try {
+                // [수정] video_url이 'ORDER_ITEM' (발주 전용)이 아닌 것만 가져오기
+                // SELECT 문에 video_url 포함 필수
                 const { data, error } = await window.sb.from('total_posts')
-                    .select('id, title, thumbnail_url, content, created_at')
+                    .select('id, title, thumbnail_url, content, created_at, video_url')
                     .eq('category', category)
-                    .order('order_num', { ascending: true }).order('created_at', { ascending: false });
+                    .neq('video_url', 'ORDER_ITEM') // ★ 핵심 수정
+                    .order('order_num', { ascending: true })
+                    .order('created_at', { ascending: false });
 
                 if (!data || data.length === 0) {
-                    postListEl.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #666;">아직 등록된 게시글이 없습니다.</div>`;
+                    postListEl.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 50px; color: #666;">등록된 게시글이 없습니다.</div>`;
                     return;
                 }
 
                 data.forEach(item => {
                     let thumb = item.thumbnail_url || NO_IMAGE_URL;
+                    let desc = item.content ? item.content.replace(/<[^>]*>?/gm, '').substring(0, 50) + '...' : '';
+
                     postListEl.insertAdjacentHTML('beforeend', `
-                            <a href="view.html?id=${item.id}" class="card post-card">
-                                <div class="card-img-wrap post-thumb">
-                                    <img src="${thumb}" alt="${item.title}" onerror="this.src='${NO_IMAGE_URL}';">
-                                </div>
-                                <div class="card-body post-info">
-                                    <h3 class="card-title post-title">${item.title}</h3>
-                                    <p class="card-text post-desc">${item.content ? item.content.replace(/<[^>]*>?/gm, '').substring(0, 50) + '...' : ''}</p>
-                                </div>
-                            </a>`);
+                                <a href="view.html?id=${item.id}" class="card post-card">
+                                    <div class="card-img-wrap post-thumb">
+                                        <img src="${thumb}" alt="${item.title}" onerror="this.src='${NO_IMAGE_URL}';">
+                                    </div>
+                                    <div class="card-body post-info">
+                                        <h3 class="card-title post-title">${item.title}</h3>
+                                        <p class="card-text post-desc">${desc}</p>
+                                    </div>
+                                </a>`);
                 });
             } catch (err) { console.error(err); }
             finally { document.getElementById('loading').style.display = 'none'; }

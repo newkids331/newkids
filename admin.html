@@ -21,6 +21,16 @@
             font-size: 0.7rem;
             color: #666;
         }
+
+        /* 뱃지 스타일 추가 */
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
@@ -112,6 +122,25 @@
             <div id="tab-posts" class="admin-section">
                 <div class="panel-box">
                     <h2 id="form-title" style="border-bottom:2px solid #1a3c6e; padding-bottom:15px; margin-bottom:20px;">📝 게시글 작성/수정</h2>
+
+                    <div style="background:#fff3cd; padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid #ffeeba;">
+                        <label style="font-weight:bold; margin-right:20px; color:#856404;">📢 노출 위치 선택 (중복 가능)</label>
+                        <div style="display:inline-flex; gap:20px; align-items:center;">
+                            <label style="cursor:pointer; display:flex; align-items:center;">
+                                <input type="checkbox" id="chk-intro" checked onchange="toggleEditorState()" style="width:18px; height:18px; margin-right:5px;">
+                                <strong>소개 페이지</strong> (일반 게시글)
+                            </label>
+                            <label style="cursor:pointer; display:flex; align-items:center;">
+                                <input type="checkbox" id="chk-order" onchange="toggleEditorState()" style="width:18px; height:18px; margin-right:5px;">
+                                <strong>발주 페이지</strong> (상품 리스트)
+                            </label>
+                        </div>
+                        <p style="font-size:0.85rem; color:#856404; margin-top:8px;">
+                            * <strong>둘 다 체크</strong>하면 소개 페이지와 발주 리스트 양쪽에 모두 나타납니다.<br>
+                            * <strong>발주 페이지용</strong>만 체크하면 상세 내용은 무시되고 상품명만 주문서에 추가됩니다.
+                        </p>
+                    </div>
+
                     <input type="file" id="hidden-image-input" accept="image/*" multiple style="display:none;">
 
                     <div class="write-inline-row">
@@ -126,7 +155,7 @@
                             </select>
                         </div>
                         <div class="form-group w-col-title" style="margin-bottom:0;">
-                            <label class="form-label">제목</label>
+                            <label class="form-label">제목 (교재명)</label>
                             <input type="text" id="post-title" class="form-input" placeholder="제목을 입력하세요">
                         </div>
                     </div>
@@ -138,7 +167,7 @@
                         <p style="font-size:0.8rem; color:#888; margin-top:5px;">* 미등록 시 유튜브 썸네일 또는 본문 첫 번째 이미지가 자동 설정됩니다.</p>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" id="editor-area">
                         <label class="form-label">내용 (에디터)</label>
                         <p style="font-size:0.85rem; color:#666; background:#f0f7ff; padding:10px; border-radius:5px; margin-bottom:10px;">
                             💡 <strong>팁:</strong> 도구 모음의 <u>'A' 밑줄 쳐진 아이콘</u>을 누르면 <strong>글자 색상</strong>을 변경할 수 있습니다.<br>
@@ -154,7 +183,7 @@
                     </div>
 
                     <div class="form-grid">
-                        <div class="form-group">
+                        <div class="form-group" id="youtube-area">
                             <label class="form-label">유튜브 URL</label>
                             <input type="text" id="youtube-url" class="form-input" placeholder="https://youtu.be/...">
                         </div>
@@ -332,6 +361,10 @@
         let currentPage = 1;
         let categoryList = []; // 순서 변경용
 
+        // [핵심] 중복 선택을 위한 DB 식별자
+        const FLAG_ORDER_ONLY = 'ORDER_ITEM'; // 발주용만
+        const FLAG_ORDER_ALL = 'ORDER_ALL';   // 둘 다 (발주 + 소개)
+
         // [헬퍼 함수]
         function getYoutubeId(url) {
             if (!url) return null;
@@ -347,7 +380,7 @@
 
         // [초기화]
         document.addEventListener("DOMContentLoaded", async function () {
-            // [수정] 에디터 설정 (색상 선택기 포함)
+            // [수정] 에디터 설정
             Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
             quill = new Quill('#editor-container', {
                 theme: 'snow',
@@ -356,7 +389,6 @@
                     toolbar: {
                         container: [
                             [{ 'header': [1, 2, 3, false] }],
-                            // [중요] color와 background 옵션이 있는지 확인
                             ['bold', 'italic', 'underline', { 'color': [] }, { 'background': [] }],
                             [{ 'align': [] }, 'link', 'image', 'video']
                         ],
@@ -408,19 +440,15 @@
 
                 categoryList = data; // 전역 저장
 
-                // [수정] 그리드 레이아웃 확장 (색상 컬럼 2개로 분리)
-                // Grid: 유형(60) | 순서(50) | 코드(80) | 이름(120) | 제목(120) | 제목색(40) | 내용색(40) | 설명(1fr) | 이미지(50) | 노출(60) | 관리(110)
                 const gridStyle = "grid-template-columns: 60px 50px 80px 120px 120px 45px 45px 1fr 50px 60px 110px;";
 
                 let html = `
-                        <div class="cat-manage-layout cat-manage-header" style="${gridStyle}">
-                            <div>유형</div><div>순서</div><div>코드</div><div>메뉴 이름</div><div>상단 제목</div><div>T색</div><div>C색</div><div>설명글 (내용)</div><div>이미지</div><div>노출</div><div>관리</div>
-                        </div>`;
+                            <div class="cat-manage-layout cat-manage-header" style="${gridStyle}">
+                                <div>유형</div><div>순서</div><div>코드</div><div>메뉴 이름</div><div>상단 제목</div><div>T색</div><div>C색</div><div>설명글 (내용)</div><div>이미지</div><div>노출</div><div>관리</div>
+                            </div>`;
 
                 data.forEach((cat, index) => {
                     const thumb = cat.hero_image || 'https://via.placeholder.com/50?text=No';
-
-                    // [수정] 분리된 색상 값 가져오기
                     const titleColor = cat.hero_title_color || '#ffffff';
                     const descColor = cat.hero_desc_color || '#ffffff';
 
@@ -430,40 +458,40 @@
                     else if (cat.type === 'EVENT') { badgeColor = '#f4a261'; badgeText = '행사'; }
                     else if (cat.type === 'BOARD') { badgeColor = '#27ae60'; badgeText = '게시판'; }
 
-                    const isVisible = cat.is_visible !== false; // 기본값 true
+                    const isVisible = cat.is_visible !== false;
                     const visBtn = isVisible
                         ? `<button class="btn-mini" style="background:#27ae60; color:#fff;" onclick="toggleVisibility('${cat.code}', false)">ON</button>`
                         : `<button class="btn-mini" style="background:#999; color:#fff;" onclick="toggleVisibility('${cat.code}', true)">OFF</button>`;
 
                     html += `
-                            <div class="cat-manage-layout cat-manage-row" style="${gridStyle}">
-                                <div class="cat-cell-center"><span class="type-badge" style="background:${badgeColor}">${badgeText}</span></div>
-                                <div class="cat-cell-center">
-                                    <button class="btn-order" onclick="moveCategory(${index}, -1)">▲</button>
-                                    <button class="btn-order" onclick="moveCategory(${index}, 1)">▼</button>
-                                </div>
-                                <div class="cat-cell-center" style="font-weight:bold; font-size:0.9rem;">${cat.code}</div>
-                                <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
-                                <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
+                                <div class="cat-manage-layout cat-manage-row" style="${gridStyle}">
+                                    <div class="cat-cell-center"><span class="type-badge" style="background:${badgeColor}">${badgeText}</span></div>
+                                    <div class="cat-cell-center">
+                                        <button class="btn-order" onclick="moveCategory(${index}, -1)">▲</button>
+                                        <button class="btn-order" onclick="moveCategory(${index}, 1)">▼</button>
+                                    </div>
+                                    <div class="cat-cell-center" style="font-weight:bold; font-size:0.9rem;">${cat.code}</div>
+                                    <div class="cat-cell-input"><input type="text" id="name-${cat.code}" value="${cat.name}"></div>
+                                    <div class="cat-cell-input"><input type="text" id="title-${cat.code}" value="${cat.hero_title || ''}"></div>
 
-                                <div class="cat-cell-center">
-                                    <input type="color" id="t-color-${cat.code}" value="${titleColor}" title="제목 색상" style="width:30px; height:30px; padding:0; border:none; background:none; cursor:pointer;">
-                                </div>
-                                <div class="cat-cell-center">
-                                    <input type="color" id="d-color-${cat.code}" value="${descColor}" title="내용 색상" style="width:30px; height:30px; padding:0; border:none; background:none; cursor:pointer;">
-                                </div>
+                                    <div class="cat-cell-center">
+                                        <input type="color" id="t-color-${cat.code}" value="${titleColor}" title="제목 색상" style="width:30px; height:30px; padding:0; border:none; background:none; cursor:pointer;">
+                                    </div>
+                                    <div class="cat-cell-center">
+                                        <input type="color" id="d-color-${cat.code}" value="${descColor}" title="내용 색상" style="width:30px; height:30px; padding:0; border:none; background:none; cursor:pointer;">
+                                    </div>
 
-                                <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
-                                <div class="cat-cell-center" style="cursor:pointer;" onclick="document.getElementById('file-${cat.code}').click()">
-                                    <img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid #ddd; margin:0 auto;">
-                                    <input type="file" id="file-${cat.code}" style="display:none;" accept="image/*">
-                                </div>
-                                <div class="cat-cell-center">${visBtn}</div>
-                                <div class="cat-cell-center" style="display:flex; gap:5px; justify-content:center;">
-                                    <button onclick="updateCategory('${cat.code}')" class="btn-mini" style="background:#1a3c6e; color:#fff; border:none; padding:5px 10px;">저장</button>
-                                    <button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; border:none; padding:5px 10px;">삭제</button>
-                                </div>
-                            </div>`;
+                                    <div class="cat-cell-input"><input type="text" id="desc-${cat.code}" value="${cat.hero_desc || ''}"></div>
+                                    <div class="cat-cell-center" style="cursor:pointer;" onclick="document.getElementById('file-${cat.code}').click()">
+                                        <img src="${thumb}" style="width:40px; height:40px; object-fit:cover; border-radius:4px; border:1px solid #ddd; margin:0 auto;">
+                                        <input type="file" id="file-${cat.code}" style="display:none;" accept="image/*">
+                                    </div>
+                                    <div class="cat-cell-center">${visBtn}</div>
+                                    <div class="cat-cell-center" style="display:flex; gap:5px; justify-content:center;">
+                                        <button onclick="updateCategory('${cat.code}')" class="btn-mini" style="background:#1a3c6e; color:#fff; border:none; padding:5px 10px;">저장</button>
+                                        <button onclick="deleteCategory('${cat.code}')" class="btn-mini" style="background:#ff6b6b; color:#fff; border:none; padding:5px 10px;">삭제</button>
+                                    </div>
+                                </div>`;
                 });
                 listDiv.innerHTML = html;
 
@@ -503,8 +531,6 @@
             const n = document.getElementById(`name-${code}`).value;
             const t = document.getElementById(`title-${code}`).value;
             const d = document.getElementById(`desc-${code}`).value;
-
-            // [수정] 2개의 색상 값 가져오기
             const tc = document.getElementById(`t-color-${code}`).value;
             const dc = document.getElementById(`d-color-${code}`).value;
 
@@ -517,7 +543,6 @@
                 u = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
             }
 
-            // [수정] DB 필드명에 맞춰 저장
             const ud = {
                 name: n,
                 hero_title: t,
@@ -584,6 +609,22 @@
             filterSelect.innerHTML = `<option value="all">전체 보기</option>${postSelect.innerHTML}`;
         }
 
+        // [추가] 에디터 및 입력창 활성/비활성 제어 (체크박스 상태에 따라)
+        window.toggleEditorState = function () {
+            const isIntro = document.getElementById('chk-intro').checked;
+            const ed = document.getElementById('editor-area');
+            const yt = document.getElementById('youtube-area');
+
+            // 소개 페이지 체크가 해제되면(발주용만 남으면) 에디터 등을 흐리게 처리
+            if (isIntro) {
+                ed.style.opacity = '1'; ed.style.pointerEvents = 'auto';
+                yt.style.opacity = '1'; yt.style.pointerEvents = 'auto';
+            } else {
+                ed.style.opacity = '0.5'; ed.style.pointerEvents = 'none';
+                yt.style.opacity = '0.5'; yt.style.pointerEvents = 'none';
+            }
+        }
+
         async function uploadPost() {
             try { const formatter = quill.getModule('blotFormatter'); if (formatter?.hide) formatter.hide(); } catch (e) { }
             if (quill) { quill.setSelection(null); quill.blur(); }
@@ -591,6 +632,13 @@
 
             const ti = document.getElementById('post-title').value;
             if (!ti) return alert("제목을 입력해주세요.");
+
+            // [핵심] 체크박스 상태 확인 (중복 선택 가능)
+            const isIntro = document.getElementById('chk-intro').checked;
+            const isOrder = document.getElementById('chk-order').checked;
+
+            if (!isIntro && !isOrder) return alert("최소한 하나의 노출 위치를 선택해주세요.");
+
             showLoading(true);
 
             const cat = document.getElementById('post-category').value;
@@ -618,10 +666,23 @@
                 du = window.sb.storage.from('images').getPublicUrl(data.path).data.publicUrl;
             }
 
+            let videoVal = document.getElementById('youtube-url').value;
+
+            // [저장 로직] video_url 필드에 상태 저장
+            if (isOrder && isIntro) {
+                // 둘 다 선택: 구분자 사용 ("ORDER_ALL|https://...")
+                // 기존 URL이 있으면 뒤에 붙임
+                videoVal = FLAG_ORDER_ALL + (videoVal ? '|' + videoVal : '');
+            } else if (isOrder && !isIntro) {
+                // 발주만 선택
+                videoVal = FLAG_ORDER_ONLY;
+            }
+            // 소개만 선택 시에는 videoVal 그대로 저장 (URL 또는 공란)
+
             const pd = {
                 title: ti, content: quill.root.innerHTML, category: cat,
                 order_num: parseInt(document.getElementById('post-order').value) || 0,
-                video_url: document.getElementById('youtube-url').value,
+                video_url: videoVal,
                 link_url: document.getElementById('post-link').value,
                 thumbnail_url: tu, image_url: du
             };
@@ -665,8 +726,6 @@
                 document.getElementById('conf-accent').value = data.accent_color || "#f4a261";
                 document.getElementById('conf-main-title').value = data.main_hero_title || "";
                 document.getElementById('conf-main-desc').value = data.main_hero_desc || "";
-
-                // [수정] 분리된 색상 값 로드
                 document.getElementById('conf-main-title-color').value = data.main_hero_title_color || "#ffffff";
                 document.getElementById('conf-main-desc-color').value = data.main_hero_desc_color || "#ffffff";
 
@@ -698,11 +757,8 @@
                 accent_color: document.getElementById('conf-accent').value,
                 main_hero_title: document.getElementById('conf-main-title').value,
                 main_hero_desc: document.getElementById('conf-main-desc').value,
-
-                // [수정] 분리된 색상 값 저장
                 main_hero_title_color: document.getElementById('conf-main-title-color').value,
                 main_hero_desc_color: document.getElementById('conf-main-desc-color').value,
-
                 main_hero_image: mainHeroUrl,
                 updated_at: new Date()
             };
@@ -746,19 +802,26 @@
                 const opt = document.querySelector(`#post-category option[value="${item.category}"]`);
                 if (opt) catName = opt.innerText;
 
+                // [추가] 뱃지 표시 로직 수정 (중복 선택 반영)
+                let badge = "";
+                const v = item.video_url || "";
+                if (v === FLAG_ORDER_ONLY) badge = `<span class="badge" style="background:#fff3cd; color:#856404;">📦발주전용</span>`;
+                else if (v.startsWith(FLAG_ORDER_ALL)) badge = `<span class="badge" style="background:#d4edda; color:#155724;">✅통합노출</span>`;
+                else badge = `<span class="badge" style="background:#eef6ff; color:#1a3c6e;">📖소개전용</span>`;
+
                 list.innerHTML += `
-                            <div class="post-manage-card">
-                                <img src="${thumb}" class="pm-thumb" alt="thumbnail">
-                                <div class="pm-body">
-                                    <span class="pm-cat-badge">${catName}</span>
-                                    <div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${item.title}</div>
-                                    <div class="pm-info">순서: ${item.order_num}</div>
-                                </div>
-                                <div class="pm-actions">
-                                    <button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button>
-                                    <button onclick='deletePost(${item.id})' class="pm-btn">삭제</button>
-                                </div>
-                            </div>`;
+                                <div class="post-manage-card">
+                                    <img src="${thumb}" class="pm-thumb" alt="thumbnail">
+                                    <div class="pm-body">
+                                        <div style="margin-bottom:5px;">${badge} <span class="pm-cat-badge">${catName}</span></div>
+                                        <div class="pm-title" onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})'>${item.title}</div>
+                                        <div class="pm-info">순서: ${item.order_num}</div>
+                                    </div>
+                                    <div class="pm-actions">
+                                        <button onclick='editPost(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="pm-btn">수정</button>
+                                        <button onclick='deletePost(${item.id})' class="pm-btn">삭제</button>
+                                    </div>
+                                </div>`;
             });
             renderPagination(count, currentPage);
         }
@@ -770,14 +833,37 @@
             for (let i = 1; i <= tp; i++) p.innerHTML += `<button class="page-btn ${i === c ? 'active' : ''}" onclick="loadManageList(${i})">${i}</button>`;
         }
 
+        // [수정] 수정 모드: 체크박스 상태 복원
         window.editPost = function (i) {
             editingId = i.id; originalDetailUrl = i.image_url; originalThumbUrl = i.thumbnail_url;
             document.getElementById('post-category').value = i.category;
             document.getElementById('post-title').value = i.title;
             quill.root.innerHTML = i.content || "";
-            document.getElementById('youtube-url').value = i.video_url || "";
             document.getElementById('post-link').value = i.link_url || "";
             document.getElementById('post-order').value = i.order_num || 0;
+
+            // 상태 복원 로직
+            let val = i.video_url || "";
+            const chkIntro = document.getElementById('chk-intro');
+            const chkOrder = document.getElementById('chk-order');
+            const youtubeInput = document.getElementById('youtube-url');
+
+            if (val === FLAG_ORDER_ONLY) {
+                chkIntro.checked = false;
+                chkOrder.checked = true;
+                youtubeInput.value = "";
+            } else if (val.startsWith(FLAG_ORDER_ALL)) {
+                chkIntro.checked = true;
+                chkOrder.checked = true;
+                // "ORDER_ALL|https://..." 형식에서 URL만 분리해서 보여줌
+                youtubeInput.value = val.replace(FLAG_ORDER_ALL, '').replace('|', '');
+            } else {
+                chkIntro.checked = true;
+                chkOrder.checked = false;
+                youtubeInput.value = val;
+            }
+            toggleEditorState();
+
             document.getElementById('form-title').innerText = "✏️ 수정 모드";
             document.getElementById('btn-submit').innerText = "수정 완료";
             document.getElementById('btn-cancel-edit').style.display = "inline-block";
@@ -789,6 +875,12 @@
             document.getElementById('post-title').value = "";
             quill.root.innerHTML = "";
             document.querySelectorAll('input[type="file"]').forEach(i => i.value = "");
+
+            // 초기화
+            document.getElementById('chk-intro').checked = true;
+            document.getElementById('chk-order').checked = false;
+            toggleEditorState();
+
             document.getElementById('form-title').innerText = "📝 게시글 작성/수정";
             document.getElementById('btn-submit').innerText = "업로드 저장";
             document.getElementById('btn-cancel-edit').style.display = "none";

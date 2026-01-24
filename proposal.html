@@ -126,8 +126,10 @@
                     if (c.type === 'EDU') eduCats.push(c.code); else eventCats.push(c.code);
                 });
 
+                // ★ 수정됨: video_url이 'ORDER_ITEM' (발주 전용)인 항목은 제외하고 가져오기
                 const { data: posts, error: postError } = await sb.from('total_posts')
-                    .select('title, category, order_num')
+                    .select('title, category, order_num, video_url')
+                    .neq('video_url', 'ORDER_ITEM') // [필터 추가] 발주용 상품 제외
                     .order('order_num', { ascending: true });
 
                 document.getElementById('loading-msg').style.display = 'none';
@@ -143,23 +145,23 @@
                     categoryCodes.forEach(code => {
                         const items = groupedData[code] || [];
                         html += `
-                            <div class="sub-cat-wrapper">
-                                <div class="sub-cat-header" onclick="toggleProposalCategory(this)">
-                                    <div class="sub-cat-title">
-                                        <span>${CATEGORY_NAMES[code] || code}</span>
+                                <div class="sub-cat-wrapper">
+                                    <div class="sub-cat-header" onclick="toggleProposalCategory(this)">
+                                        <div class="sub-cat-title">
+                                            <span>${CATEGORY_NAMES[code] || code}</span>
+                                        </div>
+                                        <span class="sub-toggle-icon">▼</span>
                                     </div>
-                                    <span class="sub-toggle-icon">▼</span>
-                                </div>
-                                <div class="proposal-check-grid">`;
+                                    <div class="proposal-check-grid">`;
 
                         if (items.length > 0) {
                             items.forEach(post => {
                                 const safeTitle = escapeHtml(post.title);
                                 html += `
-                                        <label class="proposal-item">
-                                            <input type="checkbox" name="items" value="[${CATEGORY_NAMES[code]}] ${safeTitle}">
-                                            <span>${safeTitle}</span>
-                                        </label>`;
+                                                <label class="proposal-item">
+                                                    <input type="checkbox" name="items" value="[${CATEGORY_NAMES[code]}] ${safeTitle}">
+                                                    <span>${safeTitle}</span>
+                                                </label>`;
                             });
                         } else {
                             html += `<div style="padding:10px; color:#999; font-size:0.9rem;">등록된 프로그램이 없습니다.</div>`;
@@ -198,11 +200,10 @@
             }
         };
 
-        // [수정됨] 배경 클릭 시 닫기 로직 (Wrapper class 제거로 수정)
         document.addEventListener('click', function (e) {
             if (!e.target.closest('.sub-cat-wrapper')) {
                 document.querySelectorAll('.sub-cat-wrapper').forEach(w => {
-                    w.classList.remove('active'); // 헤더가 아닌 박스 전체 비활성화
+                    w.classList.remove('active');
                     const g = w.querySelector('.proposal-check-grid');
                     if (g) g.classList.remove('show');
                 });
@@ -256,5 +257,4 @@
         }
     </script>
 </body>
-
 </html>
