@@ -1,4 +1,4 @@
-﻿// manager.js - 뉴키즈 홈페이지 통합 관리자 (v3.4 - 색상 분리 적용)
+﻿// manager.js - 뉴키즈 홈페이지 통합 관리자 (v3.5 - 오버레이 색상/투명도 조절 적용)
 
 window.GLOBAL_CATEGORIES = [];
 
@@ -17,8 +17,22 @@ const DEFAULT_CATEGORIES = [
     { code: 'special', name: '⭐ 기타(특색)', type: 'EDU' },
     { code: 'season', name: '🎉 시즌 테마 행사', type: 'EVENT' },
     { code: 'culture', name: '🌍 원어민 행사', type: 'EVENT' },
-    { code: 'performance', name: '👨‍👩‍👧‍👦 부모 참여 행사', type: 'EVENT' }
+    { code: 'performance', name: '👨‍👩‍👧‍👦 부모 참여 행사', type: 'EVENT' },
+    // [추가] 고정 페이지 정보
+    { code: 'proposal', name: '견적 요청', type: 'PAGE' },
+    { code: 'order', name: '교재 발주', type: 'PAGE' }
 ];
+
+// [유틸리티] Hex 색상(#RRGGBB)을 RGBA로 변환
+function hexToRgba(hex, opacity) {
+    if (!hex) return `rgba(26, 60, 110, ${opacity})`;
+    hex = hex.replace('#', '');
+    if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+}
 
 (function initSystem() {
     if (typeof supabase !== 'undefined' && typeof CONFIG !== 'undefined') {
@@ -66,11 +80,19 @@ async function loadSiteConfig() {
             if (data.accent_color) root.style.setProperty('--accent-color', data.accent_color);
 
             if (mainHero) {
+                // [수정] 메인 배경 적용 로직 (오버레이 적용)
                 if (data.main_hero_image) {
-                    mainHero.style.backgroundImage = `linear-gradient(rgba(26,60,110,0.4), rgba(26,60,110,0.4)), url('${data.main_hero_image}')`;
+                    const overlayColor = data.main_hero_overlay_color || '#1a3c6e';
+                    const overlayOpacity = data.main_hero_overlay_opacity !== undefined ? data.main_hero_overlay_opacity : 0.4;
+                    const rgba = hexToRgba(overlayColor, overlayOpacity);
+
+                    mainHero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba}), url('${data.main_hero_image}')`;
+                    mainHero.style.backgroundColor = 'transparent';
+                } else {
+                    mainHero.style.backgroundImage = 'none';
+                    mainHero.style.backgroundColor = data.main_hero_bg_color || '#1a3c6e';
                 }
 
-                // [수정] 메인 색상 적용 (제목, 내용 분리)
                 if (data.main_hero_title_color) {
                     const h1 = mainHero.querySelector('h1');
                     if (h1) h1.style.color = data.main_hero_title_color;
@@ -117,10 +139,15 @@ function applySubPageHero() {
     if (!hero) return;
 
     let currentCode = '';
+    // 현재 페이지 식별 로직
     if (location.pathname.includes('child.html')) {
         currentCode = location.hash.replace('#', '') || 'korean';
     } else if (location.pathname.includes('program.html')) {
         currentCode = location.hash.replace('#', '');
+    } else if (location.pathname.includes('proposal.html')) {
+        currentCode = 'proposal';
+    } else if (location.pathname.includes('order.html')) {
+        currentCode = 'order';
     } else if (location.pathname.includes('view.html')) {
         // 상세 페이지 별도 처리
     } else {
@@ -129,13 +156,21 @@ function applySubPageHero() {
 
     const category = window.GLOBAL_CATEGORIES.find(c => c.code === currentCode);
     if (category) {
+        // [수정] 서브 페이지 배경 적용 로직 (오버레이 적용)
         if (category.hero_image) {
-            hero.style.backgroundImage = `linear-gradient(rgba(26,60,110,0.8), rgba(26,60,110,0.8)), url('${category.hero_image}')`;
+            const overlayColor = category.hero_overlay_color || '#1a3c6e';
+            const overlayOpacity = category.hero_overlay_opacity !== undefined ? category.hero_overlay_opacity : 0.8;
+            const rgba = hexToRgba(overlayColor, overlayOpacity);
+
+            hero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba}), url('${category.hero_image}')`;
             hero.style.backgroundSize = 'cover';
             hero.style.backgroundPosition = 'center';
+            hero.style.backgroundColor = 'transparent';
+        } else {
+            hero.style.backgroundImage = 'none';
+            hero.style.backgroundColor = category.hero_bg_color || '#1a3c6e';
         }
 
-        // [수정] 서브 페이지 색상 적용 (제목, 내용 분리)
         if (category.hero_title_color) {
             const h1 = hero.querySelector('h1');
             if (h1) h1.style.color = category.hero_title_color;
@@ -159,14 +194,22 @@ window.updateHeroBackground = function (categoryCode) {
     if (!hero) return;
     const category = window.GLOBAL_CATEGORIES.find(c => c.code === categoryCode);
     if (category) {
+        // [수정] 상세 페이지 오버레이 적용
         if (category.hero_image) {
-            hero.style.backgroundImage = `linear-gradient(rgba(26,60,110,0.8), rgba(26,60,110,0.8)), url('${category.hero_image}')`;
+            const overlayColor = category.hero_overlay_color || '#1a3c6e';
+            const overlayOpacity = category.hero_overlay_opacity !== undefined ? category.hero_overlay_opacity : 0.8;
+            const rgba = hexToRgba(overlayColor, overlayOpacity);
+
+            hero.style.backgroundImage = `linear-gradient(${rgba}, ${rgba}), url('${category.hero_image}')`;
             hero.className = 'sub-hero';
             hero.style.backgroundSize = 'cover';
             hero.style.backgroundPosition = 'center';
+            hero.style.backgroundColor = 'transparent';
+        } else {
+            hero.style.backgroundImage = 'none';
+            hero.style.backgroundColor = category.hero_bg_color || '#1a3c6e';
         }
 
-        // [수정] 상세 페이지 색상 적용 (제목, 내용 분리)
         if (category.hero_title_color) {
             const h1 = hero.querySelector('h1');
             if (h1) h1.style.color = category.hero_title_color;

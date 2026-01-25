@@ -403,6 +403,7 @@ header {
 
         .sub-hero {
             height: 350px;
+            
             background-size: cover;
             background-position: center;
             display: flex;
